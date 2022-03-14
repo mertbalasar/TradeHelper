@@ -8,6 +8,7 @@ TradeHelper is a project that helps about trade strategy. You firstly create a c
 * Accessible (access to TA indicators easily)
 * Supports 80+ TA Indicators
 * Everythings Are Asynchron
+* Provides A Report (includes historical positions and strategy metrics as `.json` file)
 
 ## Disadvantages
 
