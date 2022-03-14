@@ -77,7 +77,7 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
         Console.WriteLine("Initialized MyStrategy!");
     }
 
-    public async override Task<bool> RunAlways()
+    public async override Task&lt;bool> RunAlways()
     {
         await Task.Delay(0);
         return true;
