@@ -50,7 +50,7 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
 | Method | Parameters | Returns | Description
 |--|--|--|--|
 | Initialize |  | void | Runs first before all
-| RunAlways |  | Task&lt;bool> | Runs everytime by synchron. Waits for own tasks to finish and repeats
+| RunAlways |  | Task&lt;bool> | Runs everytime by synchron. Waits for own tasks to finish and repeats (Task&lt;bool> is not important)
 | RunTriggered | IProcessResult Graphic | void | Runs when it is triggered via value of `RunTriggeredInterval` property. Does not wait for own tasks to finish for trigger
 
 | Property | Type | Description
@@ -61,3 +61,40 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
 | GMTForGraph | int | Contains GMT period for kline data (if you give 3 then result is GMT+3, either if you give -2 then result is GMT-2)
 | Binance | IBinancePosition | Contains Binance object for your processes about Binance positions
 | Test | ITestPosition | Contains Test object for your processes about Test exchange positions (this exchange is not real)
+
+#### Example
+<pre><code>public class MyStrategy : Strategy
+{
+    public override KlineInterval? RunTriggeredInterval { get; set; }       = KlineInterval.FifteenMinutes; // fifteen minutes kline interval
+    public override int RunAlwaysDelay { get; set; }                        = 100; // 100 ms delay for RunAlways()
+    public override string[] Symbols { get; set; }                          = new string[] { "BTCUSDT" }; // only BTCUSDT for positions or analyses
+    public override int GMTForGraph { get; set; }                           = +3; // GMT+3 for graphic data
+    public override IBinancePosition Binance { get; set; }
+    public override ITestPosition Test { get; set; }
+
+    public override void Initialize()
+    {
+        Console.WriteLine("Initialized MyStrategy!");
+    }
+
+    public async override Task<bool> RunAlways()
+    {
+        await Task.Delay(0);
+        return true;
+    }
+
+    public override void RunTriggered(IProcessResult Graphic)
+    {
+        List<IKlineResult> result = (List<IKlineResult>)Graphic.Data; // contains BTCUSDT graphic data (with fifteen minutes interval) and indicators as an element of List
+    }
+}
+</code></pre>
+
+## IProcessResult
+The interface `IProcessResult` provides to results after any calling method. This interface has the following fields:<br>
+
+| Property | Type | Description
+|--|--|--|
+| Status | ProcessStatus | Contains knowledge for finish status belong to any method
+| Message | string | Contains error message if it is exist
+| Data | object | Contains body data from the finished a method (as be an IKlineResult object, either as be an decimal value, ... etc.)
