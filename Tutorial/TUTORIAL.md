@@ -72,7 +72,7 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
     public override IBinancePosition Binance { get; set; }
     public override ITestPosition Test { get; set; }
 
-    public async override Task<bool> Initialize()
+    public async override Task&lt;bool> Initialize()
     {
         Console.WriteLine("Initialized MyStrategy!");
 
@@ -80,7 +80,7 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
         return true;
     }
 
-    public async override Task<bool> RunAlways()
+    public async override Task&lt;bool> RunAlways()
     {
         Console.WriteLine("Triggered Run Always, And Will Be Trigger After 100 Milisecond");
 
