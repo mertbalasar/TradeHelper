@@ -50,7 +50,7 @@ namespace TradeHelper
             return result;
         }
 
-        public static IProcessResult StartStrategies()
+        public async static Task<IProcessResult> StartStrategies()
         {
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
@@ -66,7 +66,7 @@ namespace TradeHelper
             {
                 foreach (IBindStrategy bounds in Strategies)
                 {
-                    StartedStrategy(bounds);
+                    await StartedStrategy(bounds);
 
                     KlineInterval intervalParam = KlineInterval.OneMinute;
                     if (bounds.Strategy.RunTriggeredInterval != null)
@@ -144,11 +144,11 @@ namespace TradeHelper
             return result;
         }
 
-        private static void StartedStrategy(IBindStrategy bounds)
+        private async static Task<bool> StartedStrategy(IBindStrategy bounds)
         {
             bounds.Strategy.Binance = new BinanceProcessor();
             bounds.Strategy.Test = new TestExchangeProcessor();
-            bounds.Strategy.Initialize();
+            await bounds.Strategy.Initialize();
 
             Task.Run(async () =>
             {
@@ -158,6 +158,8 @@ namespace TradeHelper
                     await Task.Delay(bounds.Strategy.RunAlwaysDelay);
                 }
             });
+
+            return true;
         }
 
         private static async void Trigger_Triggered(object sender, Strategy strategy)

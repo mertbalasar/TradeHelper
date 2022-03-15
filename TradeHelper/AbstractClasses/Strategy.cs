@@ -18,7 +18,7 @@ namespace TradeHelper.AbstractClasses
         public abstract IBinancePosition Binance { get; set; }
         public abstract ITestPosition Test { get; set; }
 
-        public abstract void Initialize();
+        public abstract Task<bool> Initialize();
         public abstract Task<bool> RunAlways();
         public abstract void RunTriggered(IProcessResult Graphic);
     }
