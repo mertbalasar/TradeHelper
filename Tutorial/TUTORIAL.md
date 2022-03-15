@@ -191,6 +191,10 @@ Console.WriteLine("You entered in: " + positionResult.EntryPrice.ToString());
 </code></pre>
 
 ## Example Strategy
+Here is the EMA(50) strategy. If the price breaks the EMA(50) value to up then strategy opens long position. Otherwise if the price breaks the EMA(50) value to down then strategy closes to long position.<br><br>
+
+Firstly, create your application. And append our .dll files into your references. Add to your project following class. Then append your strategy class into `StrategyBuilder` and call whenever you want to `StrategyBuilder.StartStrategies()`.
+
 <pre><code>public class EmaStrategy : Strategy
 {
     public override KlineInterval? RunTriggeredInterval { get; set; }       = KlineInterval.OneMinute;
@@ -290,3 +294,5 @@ Console.WriteLine("You entered in: " + positionResult.EntryPrice.ToString());
     }
 }
 </code></pre>
+<br>
+After everything is done, look at the project directories and search Reports directory under the debug level directories for .json files.
