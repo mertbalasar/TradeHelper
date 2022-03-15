@@ -17,3 +17,12 @@ TradeHelper is a project that helps about trade strategy. You firstly create a c
 ## Tutorial
 
 Please look at the `Tutorial/TUTORIAL.md` file for details.
+
+## Tanks For
+
+* https://github.com/JKorf/Binance.Net (For Supports Binance API)
+* https://daveskender.github.io/Stock.Indicators/ (For Supports TA Indicators)
+
+## Releases
+
+* v1.0.0
