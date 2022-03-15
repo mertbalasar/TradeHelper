@@ -191,3 +191,102 @@ Console.WriteLine("You entered in: " + positionResult.EntryPrice.ToString());
 </code></pre>
 
 ## Example Strategy
+<pre><code>public class EmaStrategy : Strategy
+{
+    public override KlineInterval? RunTriggeredInterval { get; set; }       = KlineInterval.OneMinute;
+    public override int RunAlwaysDelay { get; set; }                        = 60000;
+    public override string[] Symbols { get; set; }                          = new string[] { "avAX", "ada ", "BTc", "ETHUSDT" };
+    public override int GMTForGraph { get; set; }                           = +3;
+    public override IBinancePosition Binance { get; set; }
+    public override ITestPosition Test { get; set; }
+
+    private List<IPositionResult> openedPositions;
+    private IPositionResult openedPosition;
+    private IProcessResult positionResult;
+    private List<EmaResult> emaResult;
+    private IProcessResult lotSizeResult;
+
+    public async override Task<bool> Initialize()
+    {
+        openedPositions = new List<IPositionResult>();
+
+        Console.WriteLine("Initialized EMA Strategy!");
+
+        await Task.Delay(0);
+        return true;
+    }
+
+    public async override Task<bool> RunAlways()
+    {
+        await Task.Delay(0);
+        return true;
+    }
+
+    public async override void RunTriggered(IProcessResult Graphic)
+    {
+        Console.WriteLine("#### TRIGGERED RunTriggered");
+
+        // if pulling graphical data result is fail then will be return (maybe disconnected from ethernet)
+        if (Graphic.Status == ProcessStatus.Fail) return;
+
+        // gets all graphical data (that is includes indicators and klines knowledges of the AVAX, ADA, BTC and ETH
+        List<IKlineResult> allGraphicResult = (List<IKlineResult>)Graphic.Data;
+
+        // builds a loop for look at the all graphical data
+        foreach (IKlineResult graphicResult in allGraphicResult)
+        {
+            // searching into openedPositions to find to opened position belong to current symbol (its can be null)
+            openedPosition = openedPositions.Where((position) => position.Symbol.Equals(graphicResult.Symbol)).FirstOrDefault();
+            // gets EMA(50) results
+            emaResult = graphicResult.Indicators.GetEma(50).ToList();
+            // gets lot size filter belong to current symbol (for pass as amount parameter)
+            lotSizeResult = await TradeHelpers.GetLotSizeFilterAsync(graphicResult.Symbol);
+
+            // if pulling lot size data result is fail then will be continue from next symbol
+            if (lotSizeResult.Status == ProcessStatus.Fail) continue;
+
+            // if not exist opened position for current symbol
+            if (openedPosition == null)
+            {
+                // if previous ema value is betweens previous candle low price and previous candle high price (so if its cross) 
+                // and if current ema value is lower than current candle close price then opens long position
+                if (
+                    emaResult[emaResult.Count - 2].Ema != null && emaResult.Last().Ema != null &&
+                    emaResult[emaResult.Count - 2].Ema >= graphicResult.Klines[graphicResult.Klines.Count - 2].LowPrice &&
+                    emaResult[emaResult.Count - 2].Ema <= graphicResult.Klines[graphicResult.Klines.Count - 2].HighPrice &&
+                    emaResult.Last().Ema <= graphicResult.Klines.Last().ClosePrice
+                    )
+                {
+                    positionResult = await Test.OpenPositionAsync(graphicResult.Symbol, (decimal)lotSizeResult.Data, 5, PositionType.Long);
+                    if (positionResult.Status == ProcessStatus.Success)
+                    {
+                        openedPositions.Add((IPositionResult)positionResult.Data);
+                        Console.WriteLine("Opened Position For " + graphicResult.Symbol);
+                    }
+                }
+            }
+            // if exist opened position for current symbol
+            else
+            {
+                // if previous ema value is betweens previous candle low price and previous candle high price (so if its cross) 
+                // and if current ema value is upper than current candle close price then closes opened position and shows trade result (just for PNL)
+                if (
+                    emaResult[emaResult.Count - 2].Ema != null && emaResult.Last().Ema != null &&
+                    emaResult[emaResult.Count - 2].Ema >= graphicResult.Klines[graphicResult.Klines.Count - 2].LowPrice &&
+                    emaResult[emaResult.Count - 2].Ema <= graphicResult.Klines[graphicResult.Klines.Count - 2].HighPrice &&
+                    emaResult.Last().Ema > graphicResult.Klines.Last().ClosePrice
+                    )
+                {
+                    positionResult = await Test.ClosePositionAsync(openedPosition);
+                    if (positionResult.Status == ProcessStatus.Success)
+                    {
+                        openedPositions.Remove(openedPosition);
+                        ITradeResult tradeResult = (ITradeResult)positionResult.Data;
+                        Console.WriteLine("Closed Position For " + graphicResult.Symbol + " With PNL: " + string.Format("{0:0.00}", tradeResult.PNL) + " USDT");
+                    }
+                }
+            }
+        }
+    }
+}
+</code></pre>
