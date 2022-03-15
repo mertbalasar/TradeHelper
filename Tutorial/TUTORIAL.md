@@ -72,13 +72,18 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
     public override IBinancePosition Binance { get; set; }
     public override ITestPosition Test { get; set; }
 
-    public override void Initialize()
+    public async override Task<bool> Initialize()
     {
         Console.WriteLine("Initialized MyStrategy!");
+
+        await Task.Delay(0);
+        return true;
     }
 
-    public async override Task&lt;bool> RunAlways()
+    public async override Task<bool> RunAlways()
     {
+        Console.WriteLine("Triggered Run Always, And Will Be Trigger After 100 Milisecond");
+
         await Task.Delay(0);
         return true;
     }
@@ -130,4 +135,48 @@ The static `GraphicProcessor` class provides api for graphical data to your stra
 <pre><code>IProcessResult result = await GraphicProcessor.GetUSDTFromAssetAsync("BTC", 2);
 decimal usdtAmount = (decimal)result.Data;
 // value of usdtAmount is 80000 for now (if 1 BTC equals 40000 USDT)
+</code></pre>
+
+## IBinancePosition
+The interface `IBinancePosition` provides to operations about the Binance API. This interface has the following fields:<br>
+
+| Method | Parameters | Returns | Description
+|--|--|--|--|
+| AddCredential | string key, string secret | IProcessResult | Sets the given API Key and returns the finish flag result
+| ClosePositionAsync | IPositionResult openedPosition | (ITradeResult)IProcessResult.Data | Closes the given opened position object and returns trade results
+| GetBalanceAsync |  | (decimal)IProcessResult.Data | Returns the available USDT balance on the your Binance account
+| GetPositionDataAsync | string symbol | (IPositionResult)IProcessResult.Data | Returns the opened position data as instantaneously (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+| OpenPositionAsync | string symbol, decimal costAmount, int leverage, PositionType positionType, [FuturesMarginType marginType = FuturesMarginType.Isolated] | (IPositionResult)IProcessResult.Data | Opens to position according to given parameters and returns position results (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+
+#### Example
+<pre><code>IProcessResult result = await Binance.GetBalanceAsync();
+if (result.Status == ProcessStatus.Fail)
+{
+    Console.WriteLine(result.Message);
+    return;
+}
+
+decimal balance = (decimal)result.Data;
+// the value of balance is will be your available USDT balance
+</code></pre>
+
+## ITestPosition
+The interface `ITestPosition` provides to operations about the Test Exchange API (do not worry, that is just a fake exchange). This interface has the following fields:<br>
+
+| Method | Parameters | Returns | Description
+|--|--|--|--|
+| ClosePositionAsync | IPositionResult openedPosition | (ITradeResult)IProcessResult.Data | Closes the given opened position object and returns trade results
+| GetPositionDataAsync | IPositionResult openedPosition | (IPositionResult)IProcessResult.Data | Returns the opened position data as instantaneously (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+| OpenPositionAsync | string symbol, decimal costAmount, int leverage, PositionType positionType | (IPositionResult)IProcessResult.Data | Opens to position according to given parameters and returns position results (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+
+#### Example
+<pre><code>IProcessResult result = await Test.OpenPositionAsync("BTCUSDT", 1, 5, PositionType.Long);
+if (result.Status == ProcessStatus.Fail)
+{
+    Console.WriteLine(result.Message);
+    return;
+}
+
+IPositionResult positionResult = (IPositionResult)result.Data;
+Console.WriteLine("You entered in: " + positionResult.EntryPrice.ToString());
 </code></pre>
