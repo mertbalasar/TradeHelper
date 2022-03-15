@@ -49,8 +49,8 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| Initialize |  | `Task&lt;bool>` | Runs first before all (Task&lt;bool> is not important)
-| RunAlways |  | `Task&lt;bool>` | Runs everytime by synchron. Waits for own tasks to finish and repeats (Task&lt;bool> is not important)
+| Initialize |  | `Task<bool>` | Runs first before all (Task&lt;bool> is not important)
+| RunAlways |  | `Task<bool>` | Runs everytime by synchron. Waits for own tasks to finish and repeats (Task&lt;bool> is not important)
 | RunTriggered | `IProcessResult` Graphic | `void` | Runs when it is triggered via value of `RunTriggeredInterval` property. Does not wait for own tasks to finish for trigger
 
 | Property | Type | Description
@@ -110,7 +110,7 @@ The static `TradeHelpers` class helps to your strategy tips. This class has the 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
 | GetLotSizeFilterAsync | `string` symbol | `(decimal)IProcessResult.Data` | Returns the lot size filter result for given symbol (for "BTCUSDT" result is 0.001, this meaning minimum entry cost is 0.001 for BTCUSDT)
-| GetQuotes | `List&lt;IBinanceKline>` allKlines | `List&lt;Quote>` | Returns the converted kline data for indicators
+| GetQuotes | `List<IBinanceKline>` allKlines | `List<Quote>` | Returns the converted kline data for indicators
 | PercentChange | `decimal` firstPrice, `decimal` lastPrice | `(decimal)IProcessResult.Data` | Returns the difference as percentage for given betweens two prices (result is returning between -infinite to +infinite, not between -1 to +1)
 
 #### Example
@@ -124,11 +124,11 @@ The static `GraphicProcessor` class provides api for graphical data to your stra
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| GetAllSymbolsAsync |  | `(List&lt;string>)IProcessResult.Data` | Returns the symbol list on the Binance
+| GetAllSymbolsAsync |  | `(List<string>)IProcessResult.Data` | Returns the symbol list on the Binance
 | GetAssetFromUSDTAsync | `string` asset, `string` amountUSDT | `(decimal)IProcessResult.Data` | Returns the converted price data (USDT amount to Asset amount)
 | GetCurrentPriceAsync | `string` symbol | `(decimal)IProcessResult.Data` | Returns the instant price belong to given symbol on the Binance
-| GetKlinesAsync | `string[]` symbols, `KlineInterval` interval, [`int` gmt = 0] | `(List&lt;IKlineResult>)IProcessResult.Data` | Returns the historical candle data for given symbols and interval
-| GetKlinesAsync | `KlineInterval` interval, [`int` gmt = 0] | `(List&lt;IKlineResult>)IProcessResult.Data` | Returns the historical candle data for given interval
+| GetKlinesAsync | `string[]` symbols, `KlineInterval` interval, [`int` gmt = 0] | `(List<IKlineResult>)IProcessResult.Data` | Returns the historical candle data for given symbols and interval
+| GetKlinesAsync | `KlineInterval` interval, [`int` gmt = 0] | `(List<IKlineResult>)IProcessResult.Data` | Returns the historical candle data for given interval
 | GetUSDTFromAssetAsync | `string` asset, `string` amountAsset | `(decimal)IProcessResult.Data` | Returns the converted price data (Asset amount to USDT amount)
 
 #### Example
