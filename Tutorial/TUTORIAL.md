@@ -49,7 +49,7 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| Initialize |  | void | Runs first before all
+| Initialize |  | Task&lt;bool> | Runs first before all (Task&lt;bool> is not important)
 | RunAlways |  | Task&lt;bool> | Runs everytime by synchron. Waits for own tasks to finish and repeats (Task&lt;bool> is not important)
 | RunTriggered | IProcessResult Graphic | void | Runs when it is triggered via value of `RunTriggeredInterval` property. Does not wait for own tasks to finish for trigger
 
