@@ -11,10 +11,10 @@ The static `StrategyBuilder` class manages to your strategy classes. This class 
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| Append | Type strategyClass | IProcessResult | Appends your strategy class to its own list
-| Remove | Type strategyClass | IProcessResult | Removes your strategy class from its own list if exists
-| StartStrategies |  | IProcessResult | Starts all the strategies into its own list
-| StopStrategies |  | IProcessResult | Stops all the strategies into its own list
+| Append | `Type` strategyClass | `IProcessResult` | Appends your strategy class to its own list
+| Remove | `Type` strategyClass | `IProcessResult` | Removes your strategy class from its own list if exists
+| StartStrategies |  | `IProcessResult` | Starts all the strategies into its own list
+| StopStrategies |  | `IProcessResult` | Stops all the strategies into its own list
 
 #### Example
 <pre><code>// NOTE: MyStrategy is a your class that is inherited by Strategy class
@@ -49,18 +49,18 @@ The abstract `Strategy` class helps to create to your strategy. Have to override
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| Initialize |  | Task&lt;bool> | Runs first before all (Task&lt;bool> is not important)
-| RunAlways |  | Task&lt;bool> | Runs everytime by synchron. Waits for own tasks to finish and repeats (Task&lt;bool> is not important)
-| RunTriggered | IProcessResult Graphic | void | Runs when it is triggered via value of `RunTriggeredInterval` property. Does not wait for own tasks to finish for trigger
+| Initialize |  | `Task&lt;bool>` | Runs first before all (Task&lt;bool> is not important)
+| RunAlways |  | `Task&lt;bool>` | Runs everytime by synchron. Waits for own tasks to finish and repeats (Task&lt;bool> is not important)
+| RunTriggered | `IProcessResult` Graphic | `void` | Runs when it is triggered via value of `RunTriggeredInterval` property. Does not wait for own tasks to finish for trigger
 
 | Property | Type | Description
 |--|--|--|
-| RunTriggeredInterval | KlineInterval? | Contains kline period for triggers `RunTriggered` method
-| RunAlwaysDelay | int | Contains delay as microsecond for runs every betweens two `RunAlways` methods
-| Symbols | string[] | Contains symbol names for positions (you can give in any format you want to ("Eth", "eTH ", "ETHUSdt", "ETHUSDT", ... etc.))
-| GMTForGraph | int | Contains GMT period for kline data (if you give 3 then result is GMT+3, either if you give -2 then result is GMT-2)
-| Binance | IBinancePosition | Contains Binance object for your processes about Binance positions
-| Test | ITestPosition | Contains Test object for your processes about Test exchange positions (this exchange is not real)
+| RunTriggeredInterval | `KlineInterval?` | Contains kline period for triggers `RunTriggered` method
+| RunAlwaysDelay | `int` | Contains delay as microsecond for runs every betweens two `RunAlways` methods
+| Symbols | `string[]` | Contains symbol names for positions (you can give in any format you want to ("Eth", "eTH ", "ETHUSdt", "ETHUSDT", ... etc.))
+| GMTForGraph | `int` | Contains GMT period for kline data (if you give 3 then result is GMT+3, either if you give -2 then result is GMT-2)
+| Binance | `IBinancePosition` | Contains Binance object for your processes about Binance positions
+| Test | `ITestPosition` | Contains Test object for your processes about Test exchange positions (this exchange is not real)
 
 #### Example
 <pre><code>public class MyStrategy : Strategy
@@ -100,18 +100,18 @@ The interface `IProcessResult` provides to results after any calling method. Thi
 
 | Property | Type | Description
 |--|--|--|
-| Status | ProcessStatus | Contains knowledge for finish status belong to any method
-| Message | string | Contains error message if it is exist
-| Data | object | Contains body data from the finished a method (as be an IKlineResult object, either as be an decimal value, ... etc.)
+| Status | `ProcessStatus` | Contains knowledge for finish status belong to any method
+| Message | `string` | Contains error message if it is exist
+| Data | `object` | Contains body data from the finished a method (as be an IKlineResult object, either as be an decimal value, ... etc.)
 
 ## TradeHelpers
 The static `TradeHelpers` class helps to your strategy tips. This class has the following methods:<br>
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| GetLotSizeFilterAsync | string symbol | (decimal)IProcessResult.Data | Returns the lot size filter result for given symbol (for "BTCUSDT" result is 0.001, this meaning minimum entry cost is 0.001 for BTCUSDT)
-| GetQuotes | List&lt;IBinanceKline> allKlines | List&lt;Quote> | Returns the converted kline data for indicators
-| PercentChange | decimal firstPrice, decimal lastPrice | (decimal)IProcessResult.Data | Returns the difference as percentage for given betweens two prices (result is returning between -infinite to +infinite, not between -1 to +1)
+| GetLotSizeFilterAsync | `string` symbol | `(decimal)IProcessResult.Data` | Returns the lot size filter result for given symbol (for "BTCUSDT" result is 0.001, this meaning minimum entry cost is 0.001 for BTCUSDT)
+| GetQuotes | `List&lt;IBinanceKline>` allKlines | `List&lt;Quote>` | Returns the converted kline data for indicators
+| PercentChange | `decimal` firstPrice, `decimal` lastPrice | `(decimal)IProcessResult.Data` | Returns the difference as percentage for given betweens two prices (result is returning between -infinite to +infinite, not between -1 to +1)
 
 #### Example
 <pre><code>IProcessResult result = TradeHelpers.PercentChange(35000m, 39000m);
@@ -124,12 +124,12 @@ The static `GraphicProcessor` class provides api for graphical data to your stra
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| GetAllSymbolsAsync |  | (List&lt;string>)IProcessResult.Data | Returns the symbol list on the Binance
-| GetAssetFromUSDTAsync | string asset, string amountUSDT | (decimal)IProcessResult.Data | Returns the converted price data (USDT amount to Asset amount)
-| GetCurrentPriceAsync | string symbol | (decimal)IProcessResult.Data | Returns the instant price belong to given symbol on the Binance
-| GetKlinesAsync | string[] symbols, KlineInterval interval, [int gmt = 0] | (List&lt;IKlineResult>)IProcessResult.Data | Returns the historical candle data for given symbols and interval
-| GetKlinesAsync | KlineInterval interval, [int gmt = 0] | (List&lt;IKlineResult>)IProcessResult.Data | Returns the historical candle data for given interval
-| GetUSDTFromAssetAsync | string asset, string amountAsset | (decimal)IProcessResult.Data | Returns the converted price data (Asset amount to USDT amount)
+| GetAllSymbolsAsync |  | `(List&lt;string>)IProcessResult.Data` | Returns the symbol list on the Binance
+| GetAssetFromUSDTAsync | `string` asset, `string` amountUSDT | `(decimal)IProcessResult.Data` | Returns the converted price data (USDT amount to Asset amount)
+| GetCurrentPriceAsync | `string` symbol | `(decimal)IProcessResult.Data` | Returns the instant price belong to given symbol on the Binance
+| GetKlinesAsync | `string[]` symbols, `KlineInterval` interval, [`int` gmt = 0] | `(List&lt;IKlineResult>)IProcessResult.Data` | Returns the historical candle data for given symbols and interval
+| GetKlinesAsync | `KlineInterval` interval, [`int` gmt = 0] | `(List&lt;IKlineResult>)IProcessResult.Data` | Returns the historical candle data for given interval
+| GetUSDTFromAssetAsync | `string` asset, `string` amountAsset | `(decimal)IProcessResult.Data` | Returns the converted price data (Asset amount to USDT amount)
 
 #### Example
 <pre><code>IProcessResult result = await GraphicProcessor.GetUSDTFromAssetAsync("BTC", 2);
@@ -142,11 +142,11 @@ The interface `IBinancePosition` provides to operations about the Binance API. T
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| AddCredential | string key, string secret | IProcessResult | Sets the given API Key and returns the finish flag result
-| ClosePositionAsync | IPositionResult openedPosition | (ITradeResult)IProcessResult.Data | Closes the given opened position object and returns trade results
-| GetBalanceAsync |  | (decimal)IProcessResult.Data | Returns the available USDT balance on the your Binance account
-| GetPositionDataAsync | string symbol | (IPositionResult)IProcessResult.Data | Returns the opened position data as instantaneously (that is includes entry time, leverage, mark price, pnl, roe, etc.)
-| OpenPositionAsync | string symbol, decimal costAmount, int leverage, PositionType positionType, [FuturesMarginType marginType = FuturesMarginType.Isolated] | (IPositionResult)IProcessResult.Data | Opens to position according to given parameters and returns position results (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+| AddCredential | `string` key, `string` secret | `IProcessResult` | Sets the given API Key and returns the finish flag result
+| ClosePositionAsync | `IPositionResult` openedPosition | `(ITradeResult)IProcessResult.Data` | Closes the given opened position object and returns trade results
+| GetBalanceAsync |  | `(decimal)IProcessResult.Data` | Returns the available USDT balance on the your Binance account
+| GetPositionDataAsync | `string` symbol | `(IPositionResult)IProcessResult.Data` | Returns the opened position data as instantaneously (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+| OpenPositionAsync | `string` symbol, `decimal` costAmount, `int` leverage, `PositionType` positionType, [`FuturesMarginType` marginType = `FuturesMarginType.Isolated`] | `(IPositionResult)IProcessResult.Data` | Opens to position according to given parameters and returns position results (that is includes entry time, leverage, mark price, pnl, roe, etc.)
 
 #### Example
 <pre><code>IProcessResult result = await Binance.GetBalanceAsync();
@@ -165,9 +165,9 @@ The interface `ITestPosition` provides to operations about the Test Exchange API
 
 | Method | Parameters | Returns | Description
 |--|--|--|--|
-| ClosePositionAsync | IPositionResult openedPosition | (ITradeResult)IProcessResult.Data | Closes the given opened position object and returns trade results
-| GetPositionDataAsync | IPositionResult openedPosition | (IPositionResult)IProcessResult.Data | Returns the opened position data as instantaneously (that is includes entry time, leverage, mark price, pnl, roe, etc.)
-| OpenPositionAsync | string symbol, decimal costAmount, int leverage, PositionType positionType | (IPositionResult)IProcessResult.Data | Opens to position according to given parameters and returns position results (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+| ClosePositionAsync | `IPositionResult` openedPosition | `(ITradeResult)IProcessResult.Data` | Closes the given opened position object and returns trade results
+| GetPositionDataAsync | `IPositionResult` openedPosition | `(IPositionResult)IProcessResult.Data` | Returns the opened position data as instantaneously (that is includes entry time, leverage, mark price, pnl, roe, etc.)
+| OpenPositionAsync | `string` symbol, `decimal` costAmount, `int` leverage, `PositionType` positionType | `(IPositionResult)IProcessResult.Data` | Opens to position according to given parameters and returns position results (that is includes entry time, leverage, mark price, pnl, roe, etc.)
 
 #### Example
 <pre><code>IProcessResult result = await Test.OpenPositionAsync("BTCUSDT", 1, 5, PositionType.Long);
@@ -180,3 +180,5 @@ if (result.Status == ProcessStatus.Fail)
 IPositionResult positionResult = (IPositionResult)result.Data;
 Console.WriteLine("You entered in: " + positionResult.EntryPrice.ToString());
 </code></pre>
+
+## Example Strategy
