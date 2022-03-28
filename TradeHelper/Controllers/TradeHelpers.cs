@@ -52,6 +52,16 @@ namespace TradeHelper.Controllers
             return result;
         }
 
+        public static IProcessResult PriceChange(decimal price, decimal percentChange)
+        {
+            IProcessResult result = new ProcessResult();
+
+            result.Status = ProcessStatus.Success;
+            result.Data = ((percentChange / 100) * price) + price;
+
+            return result;
+        }
+
         public static List<Quote> GetQuotes(List<IBinanceKline> allKlines)
         {
             List<Quote> quotes = new List<Quote>();
@@ -69,6 +79,21 @@ namespace TradeHelper.Controllers
             }
 
             return quotes;
+        }
+
+        public static async Task<IProcessResult> GetConnectionStatus()
+        {
+            IProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync("BTCUSDT");
+            if (!priceResult.Success && priceResult.Error.Message.ToLower().Contains("an error occurred while sending the request"))
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = "No internet connection";
+            }
+
+            return result;
         }
     }
 }

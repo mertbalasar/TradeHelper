@@ -146,7 +146,7 @@ namespace TradeHelper
 
         private async static Task<bool> StartedStrategy(IBindStrategy bounds)
         {
-            bounds.Strategy.Binance = new BinanceProcessor();
+            bounds.Strategy.Binance = new BinanceProcessor() { GMTForGraph = bounds.Strategy.GMTForGraph };
             bounds.Strategy.Test = new TestExchangeProcessor();
             await bounds.Strategy.Initialize();
 

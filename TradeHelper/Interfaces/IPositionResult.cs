@@ -10,6 +10,7 @@ namespace TradeHelper.Interfaces
 {
     public interface IPositionResult
     {
+        long ID { get; set; }
         string Symbol { get; set; }
         DateTime EntryTime { get; set; }
         OrderSide Side { get; set; }

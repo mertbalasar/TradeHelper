@@ -18,12 +18,15 @@ namespace TradeHelper.Controllers
     {
         private static BinanceClient client = new BinanceClient();
 
-        public static async Task<IProcessResult> GetUSDTFromAssetAsync(string asset, decimal amountAsset)
+        public static async Task<IProcessResult> GetUSDTFromAssetAsync(string symbol, decimal amountAsset)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync(asset + "USDT");
+            string currentSymbol = symbol.Trim().ToUpper();
+            if (!currentSymbol.EndsWith("USDT")) currentSymbol += "USDT";
+
+            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync(currentSymbol);
             if (!priceResult.Success)
             {
                 result.Status = ProcessStatus.Fail;
@@ -36,12 +39,15 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> GetAssetFromUSDTAsync(string asset, decimal amountUSDT)
+        public static async Task<IProcessResult> GetAssetFromUSDTAsync(string symbol, decimal amountUSDT)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync(asset + "USDT");
+            string currentSymbol = symbol.Trim().ToUpper();
+            if (!currentSymbol.EndsWith("USDT")) currentSymbol += "USDT";
+
+            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync(currentSymbol);
             if (!priceResult.Success)
             {
                 result.Status = ProcessStatus.Fail;
@@ -61,9 +67,13 @@ namespace TradeHelper.Controllers
 
             List<IKlineResult> klines = new List<IKlineResult>();
             List<Quote> quotes;
+            string currentSymbol;
             foreach (string element in symbols)
             {
-                var klineResult = await client.UsdFuturesApi.ExchangeData.GetKlinesAsync(element, interval);
+                currentSymbol = element.Trim().ToUpper();
+                if (!currentSymbol.EndsWith("USDT")) currentSymbol += "USDT";
+
+                var klineResult = await client.UsdFuturesApi.ExchangeData.GetKlinesAsync(currentSymbol, interval);
                 if (!klineResult.Success)
                 {
                     result.Status = ProcessStatus.Fail;
@@ -84,7 +94,7 @@ namespace TradeHelper.Controllers
                     kline.Date = kline.Date.AddHours(gmt);
                 }
 
-                klines.Add(new KlineResult() { Symbol = element, Klines = klineResult.Data.ToList(), Indicators = quotes });
+                klines.Add(new KlineResult() { Symbol = currentSymbol, Klines = klineResult.Data.ToList(), Indicators = quotes });
             }
 
             result.Data = klines;
@@ -143,7 +153,10 @@ namespace TradeHelper.Controllers
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync(symbol);
+            string currentSymbol = symbol.Trim().ToUpper();
+            if (!currentSymbol.EndsWith("USDT")) currentSymbol += "USDT";
+
+            var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync(currentSymbol);
             if (!priceResult.Success)
             {
                 result.Status = ProcessStatus.Fail;

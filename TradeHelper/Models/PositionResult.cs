@@ -10,6 +10,7 @@ namespace TradeHelper.Models
 {
     internal class PositionResult : IPositionResult
     {
+        public long ID { get; set; }
         public string Symbol { get; set; }
         public DateTime EntryTime { get; set; }
         public OrderSide Side { get; set; }

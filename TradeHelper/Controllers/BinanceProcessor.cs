@@ -1,6 +1,7 @@
 ﻿using Binance.Net.Clients;
 using Binance.Net.Enums;
 using Binance.Net.Objects;
+using Binance.Net.Objects.Models.Futures;
 using CryptoExchange.Net.Authentication;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ namespace TradeHelper.Controllers
         {
             client = new BinanceClient();
         }
+
+        internal int GMTForGraph { get; set; }
 
         public IProcessResult AddCredential(string key, string secret)
         {
@@ -90,7 +93,7 @@ namespace TradeHelper.Controllers
             if (positionDetails != null)
             {
                 positionData.Symbol = positionDetails.Symbol;
-                positionData.EntryTime = positionDetails.UpdateTime;
+                positionData.EntryTime = positionDetails.UpdateTime.AddHours(GMTForGraph);
                 positionData.Side = side;
                 positionData.PNL = positionDetails.UnrealizedPnl; // as USDT
                 positionData.ROE = 100 * positionDetails.UnrealizedPnl / (positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage);
@@ -100,6 +103,7 @@ namespace TradeHelper.Controllers
                 positionData.EntryPrice = positionDetails.EntryPrice;
                 positionData.MarkPrice = positionDetails.MarkPrice;
                 positionData.AddedAmount = positionDetails.Quantity;
+                positionData.ID = positionResult.Data.Id;
             }
 
             result.Data = positionData;
@@ -147,15 +151,30 @@ namespace TradeHelper.Controllers
             }
 
             TradeResult tradeData = new TradeResult();
-            var tradeDetails = positionInfoResult.Data.ToList().LastOrDefault();
+            tradeData.PNL = 0;
+            tradeData.FeeUSDT = 0;
+            tradeData.Symbol = openedPosition.Symbol;
 
-            if (tradeDetails != null)
+            List<BinanceFuturesUsdtTrade> tradeDetailsForBuy = positionInfoResult.Data.ToList().Where((element) => element.OrderId == openedPosition.ID).ToList();
+            List<BinanceFuturesUsdtTrade> tradeDetailsForSell = positionInfoResult.Data.ToList().Where((element) => element.OrderId == positionResult.Data.Id).ToList();
+
+            if (tradeDetailsForSell != null && tradeDetailsForSell.Count > 0)
             {
-                tradeData.ClosePrice = tradeDetails.Price;
-                tradeData.CloseTime = tradeDetails.Timestamp;
-                tradeData.PNL = tradeDetails.RealizedPnl;
-                tradeData.Symbol = tradeDetails.Symbol;
-                tradeData.FeeUSDT = tradeDetails.Fee;
+                foreach (BinanceFuturesUsdtTrade trade in tradeDetailsForSell)
+                {
+                    tradeData.ClosePrice = trade.Price;
+                    tradeData.CloseTime = trade.Timestamp.AddHours(GMTForGraph);
+                    tradeData.PNL += trade.RealizedPnl;
+                    tradeData.FeeUSDT += trade.Fee;
+                }
+            }
+
+            if (tradeDetailsForBuy != null && tradeDetailsForBuy.Count > 0)
+            {
+                foreach (BinanceFuturesUsdtTrade trade in tradeDetailsForBuy)
+                {
+                    tradeData.FeeUSDT += trade.Fee;
+                }
             }
 
             result.Data = tradeData;
@@ -198,7 +217,7 @@ namespace TradeHelper.Controllers
             else side = OrderSide.Sell;
 
             positionData.Symbol = positionDetails.Symbol;
-            positionData.EntryTime = positionDetails.UpdateTime;
+            positionData.EntryTime = positionDetails.UpdateTime.AddHours(GMTForGraph);
             positionData.Side = side;
             positionData.PNL = positionDetails.UnrealizedPnl; // as USDT
             positionData.ROE = 100 * positionDetails.UnrealizedPnl / (positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage);
