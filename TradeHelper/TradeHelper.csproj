@@ -62,6 +62,7 @@
     <Compile Include="AbstractClasses\Strategy.cs" />
     <Compile Include="Controllers\BinanceProcessor.cs" />
     <Compile Include="Controllers\GraphicProcessor.cs" />
+    <Compile Include="Controllers\NotificationProcessor.cs" />
     <Compile Include="Controllers\ReportProcessor.cs" />
     <Compile Include="Controllers\TradeHelpers.cs" />
     <Compile Include="Controllers\TestExchangeProcessor.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Interfaces\IBindStrategy.cs" />
     <Compile Include="Interfaces\IKlineResult.cs" />
     <Compile Include="Interfaces\IBinancePosition.cs" />
+    <Compile Include="Interfaces\INotificationProcessor.cs" />
     <Compile Include="Interfaces\IPositionResult.cs" />
     <Compile Include="Interfaces\IProcessResult.cs" />
     <Compile Include="Interfaces\IReporterDetailsResult.cs" />

@@ -17,6 +17,8 @@ namespace TradeHelper.AbstractClasses
         public abstract int GMTForGraph { get; set; }
         public abstract IBinancePosition Binance { get; set; }
         public abstract ITestPosition Test { get; set; }
+        public abstract INotificationProcessor Notification { get; set; }
+        public abstract string[] MailList { get; set; }
 
         public abstract Task<bool> Initialize();
         public abstract Task<bool> RunAlways();

@@ -148,6 +148,7 @@ namespace TradeHelper
         {
             bounds.Strategy.Binance = new BinanceProcessor() { GMTForGraph = bounds.Strategy.GMTForGraph };
             bounds.Strategy.Test = new TestExchangeProcessor();
+            bounds.Strategy.Notification = new NotificationProcessor() { MailList = bounds.Strategy.MailList };
             await bounds.Strategy.Initialize();
 
             Task.Run(async () =>
