@@ -95,5 +95,14 @@ namespace TradeHelper.Controllers
 
             return result;
         }
+
+        public static IProcessResult GetPrecisionDecimal(decimal number)
+        {
+            IProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+            result.Data = BitConverter.GetBytes(decimal.GetBits(number)[3])[2];
+
+            return result;
+        }
     }
 }

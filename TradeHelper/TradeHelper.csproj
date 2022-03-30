@@ -72,6 +72,8 @@
     <Compile Include="Interfaces\IKlineResult.cs" />
     <Compile Include="Interfaces\IBinancePosition.cs" />
     <Compile Include="Interfaces\INotificationProcessor.cs" />
+    <Compile Include="Interfaces\IOrderParams.cs" />
+    <Compile Include="Interfaces\IOrderResult.cs" />
     <Compile Include="Interfaces\IPositionResult.cs" />
     <Compile Include="Interfaces\IProcessResult.cs" />
     <Compile Include="Interfaces\IReporterDetailsResult.cs" />
@@ -80,11 +82,19 @@
     <Compile Include="Interfaces\ITradeResult.cs" />
     <Compile Include="Models\BindStrategy.cs" />
     <Compile Include="Models\KlineResult.cs" />
+    <Compile Include="Models\OrderResult.cs" />
     <Compile Include="Models\PositionResult.cs" />
     <Compile Include="Models\ProcessResult.cs" />
     <Compile Include="Models\ReporterDetailsResult.cs" />
     <Compile Include="Models\ReporterResult.cs" />
     <Compile Include="Models\TradeResult.cs" />
+    <Compile Include="OrderModels\Limit.cs" />
+    <Compile Include="OrderModels\Market.cs" />
+    <Compile Include="OrderModels\StopLimit.cs" />
+    <Compile Include="OrderModels\StopMarket.cs" />
+    <Compile Include="OrderModels\TakeProfitLimit.cs" />
+    <Compile Include="OrderModels\TakeProfitMarket.cs" />
+    <Compile Include="OrderModels\TrailingStopMarket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StrategyBuilder.cs" />
   </ItemGroup>

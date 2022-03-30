@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using TradeHelper.Enums;
 using TradeHelper.Interfaces;
 using TradeHelper.Models;
+using TradeHelper.OrderModels;
 using static TradeHelper.Enums.EnumLibrary;
 
 namespace TradeHelper.Controllers
@@ -43,7 +44,7 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> OpenPositionAsync(string symbol, decimal costAmount, int leverage, PositionType positionType, FuturesMarginType marginType = FuturesMarginType.Isolated)
+        public async Task<IProcessResult> OpenPositionAsync(string symbol, decimal costAmount, int leverage, PositionType positionType, IOrderParams orderType, FuturesMarginType marginType = FuturesMarginType.Isolated)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
@@ -55,6 +56,16 @@ namespace TradeHelper.Controllers
                 result.Message = leverageResult.Error.Message;
                 return result;
             }
+
+            IProcessResult lotSizeResult = await TradeHelpers.GetLotSizeFilterAsync(symbol);
+            if (lotSizeResult.Status == ProcessStatus.Fail)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = lotSizeResult.Message;
+                return result;
+            }
+
+            int precision = (int)TradeHelpers.GetPrecisionDecimal((decimal)lotSizeResult.Data).Data;
 
             if (marginType == FuturesMarginType.Cross)
             {
@@ -71,49 +82,126 @@ namespace TradeHelper.Controllers
             if (positionType == PositionType.Long) side = OrderSide.Buy;
             else side = OrderSide.Sell;
 
-            var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, FuturesOrderType.Market, costAmount * leverage);
-            if (!positionResult.Success)
+            decimal reCalculatedAmount = Math.Round(costAmount * leverage, precision);
+            FuturesOrderType futuresOrderType = FuturesOrderType.Market;
+            BinanceFuturesPlacedOrder placedOrder = null;
+
+            if (orderType.GetType() == typeof(Limit))
             {
-                result.Status = ProcessStatus.Fail;
-                result.Message = positionResult.Error.Message;
-                return result;
+                futuresOrderType = FuturesOrderType.Limit;
+                Limit limit = (Limit)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount, 
+                    price: limit.LimitPrice, 
+                    timeInForce: limit.TimeInForce);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
+            }
+            else if (orderType.GetType() == typeof(Market))
+            {
+                futuresOrderType = FuturesOrderType.Market;
+                Market market = (Market)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
+            }
+            else if (orderType.GetType() == typeof(StopLimit))
+            {
+                futuresOrderType = FuturesOrderType.Stop;
+                StopLimit stopLimit = (StopLimit)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount,
+                    price: stopLimit.LimitPrice,
+                    stopPrice: stopLimit.StopPrice,
+                    workingType: stopLimit.StopPriceType);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
+            }
+            else if (orderType.GetType() == typeof(StopMarket))
+            {
+                futuresOrderType = FuturesOrderType.StopMarket;
+                StopMarket stopMarket = (StopMarket)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount,
+                    stopPrice: stopMarket.StopPrice,
+                    workingType: stopMarket.StopPriceType);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
+            }
+            else if (orderType.GetType() == typeof(TakeProfitLimit))
+            {
+                futuresOrderType = FuturesOrderType.TakeProfit;
+                TakeProfitLimit takeProfitLimit = (TakeProfitLimit)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount,
+                    price: takeProfitLimit.LimitPrice,
+                    stopPrice: takeProfitLimit.StopPrice,
+                    workingType: takeProfitLimit.StopPriceType);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
+            }
+            else if (orderType.GetType() == typeof(TakeProfitMarket))
+            {
+                futuresOrderType = FuturesOrderType.TakeProfitMarket;
+                TakeProfitMarket takeProfitMarket = (TakeProfitMarket)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount,
+                    stopPrice: takeProfitMarket.StopPrice,
+                    workingType: takeProfitMarket.StopPriceType);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
+            }
+            else if (orderType.GetType() == typeof(TrailingStopMarket))
+            {
+                futuresOrderType = FuturesOrderType.TrailingStopMarket;
+                TrailingStopMarket trailingStopMarket = (TrailingStopMarket)orderType;
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount,
+                    callbackRate: trailingStopMarket.CallbackRate,
+                    activationPrice: trailingStopMarket.ActivationPrice,
+                    workingType: trailingStopMarket.ActivationPriceType);
+                if (!positionResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionResult.Error.Message;
+                    return result;
+                }
+
+                placedOrder = positionResult.Data;
             }
 
-            var openOrderResult = await client.UsdFuturesApi.Account.GetPositionInformationAsync(symbol: symbol);
-            if (!openOrderResult.Success)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = openOrderResult.Error.Message;
-                return result;
-            }
-
-            PositionResult positionData = new PositionResult();
-            var positionDetails = openOrderResult.Data.ToList().FirstOrDefault();
-
-            if (positionDetails != null)
-            {
-                positionData.Symbol = positionDetails.Symbol;
-                positionData.EntryTime = positionDetails.UpdateTime.AddHours(GMTForGraph);
-                positionData.Side = side;
-                positionData.PNL = positionDetails.UnrealizedPnl; // as USDT
-                positionData.ROE = 100 * positionDetails.UnrealizedPnl / (positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage);
-                positionData.MarginUSDT = positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage; // as USDT
-                positionData.LiqPrice = positionDetails.LiquidationPrice;
-                positionData.Leverage = positionDetails.Leverage;
-                positionData.EntryPrice = positionDetails.EntryPrice;
-                positionData.MarkPrice = positionDetails.MarkPrice;
-                positionData.AddedAmount = positionDetails.Quantity;
-                positionData.ID = positionResult.Data.Id;
-            }
-
-            result.Data = positionData;
-            IProcessResult reportResult = ReportProcessor.AddReport(positionData);
-            if (reportResult.Status == ProcessStatus.Fail)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = reportResult.Message;
-                return result;
-            }
+            OrderResult orderResult = new OrderResult() { OrderID = placedOrder.Id };
+            result.Data = orderResult;
 
             return result;
         }
@@ -189,12 +277,70 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> GetPositionDataAsync(string symbol)
+        public async Task<IProcessResult> GetIsOrderFilledAsync(IOrderResult openedOrder)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            var openOrderResult = await client.UsdFuturesApi.Account.GetPositionInformationAsync(symbol: symbol);
+            var openOrderResult = await client.UsdFuturesApi.Trading.GetOpenOrdersAsync();
+            if (!openOrderResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = openOrderResult.Error.Message;
+                return result;
+            }
+
+            List<BinanceFuturesOrder> orderList = openOrderResult.Data.ToList().Where((element) => element.Id == openedOrder.OrderID).ToList();
+            if (orderList != null && orderList.Count > 0)
+            {
+                result.Data = orderList.First().Status;
+                return result;
+            }
+            else
+            {
+                var positionInfoResult = await client.UsdFuturesApi.Trading.GetUserTradesAsync(openedOrder.Symbol);
+                if (!positionInfoResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = positionInfoResult.Error.Message;
+                    return result;
+                }
+
+                List<BinanceFuturesUsdtTrade> tradeDetails = positionInfoResult.Data.ToList().Where((element) => element.OrderId == openedOrder.OrderID).ToList();
+                PositionResult positionData = new PositionResult();
+
+                if (tradeDetails != null && tradeDetails.Count > 0)
+                {
+                    foreach (BinanceFuturesUsdtTrade trade in tradeDetails)
+                    {
+                        positionData.Symbol = trade.Symbol;
+                        positionData.EntryTime = trade.Timestamp.AddHours(GMTForGraph);
+                        positionData.Side = trade.Side;
+                        positionData.EntryPrice = trade.Price;
+                        positionData.AddedAmount += trade.Quantity;
+                    }
+                }
+
+                IProcessResult reportResult = ReportProcessor.AddReport(positionData);
+                if (reportResult.Status == ProcessStatus.Fail)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = reportResult.Message;
+                    return result;
+                }
+
+                result.Data = positionData;
+
+                return result;
+            }
+        }
+
+        public async Task<IProcessResult> GetPositionDataAsync(IPositionResult openedPosition)
+        {
+            ProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            var openOrderResult = await client.UsdFuturesApi.Account.GetPositionInformationAsync(symbol: openedPosition.Symbol);
             if (!openOrderResult.Success)
             {
                 result.Status = ProcessStatus.Fail;
