@@ -22,5 +22,6 @@ namespace TradeHelper.Models
         public decimal MarkPrice { get; set; }
         public decimal LiqPrice { get; set; }
         public decimal AddedAmount { get; set; }
+        public decimal FeeUSDT { get; set; }
     }
 }

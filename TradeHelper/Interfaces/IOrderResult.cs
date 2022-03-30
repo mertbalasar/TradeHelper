@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Binance.Net.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,6 @@ namespace TradeHelper.Interfaces
     {
         string Symbol { get; set; }
         long OrderID { get; set; }
+        FuturesOrderType OrderType { get; set; }
     }
 }

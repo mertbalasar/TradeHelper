@@ -41,6 +41,7 @@ namespace TradeHelper.Controllers
             report.Details.Add(new ReporterDetailsResult() { OpenPosition = openedPosition });
             report.EndTime = openedPosition.EntryTime;
             report.TotalElapsedTime = report.EndTime - report.StartTime;
+            report.TotalFee += openedPosition.FeeUSDT;
 
             IProcessResult saveResult = SaveReport(report);
             if (saveResult.Status == ProcessStatus.Fail)
