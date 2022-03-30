@@ -100,7 +100,9 @@ namespace TradeHelper.Controllers
         {
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
-            result.Data = BitConverter.GetBytes(decimal.GetBits(number)[3])[2];
+
+            int count = BitConverter.GetBytes(decimal.GetBits(number)[3])[2];
+            result.Data = count;
 
             return result;
         }

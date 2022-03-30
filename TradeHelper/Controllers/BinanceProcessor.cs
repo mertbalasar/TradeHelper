@@ -65,7 +65,8 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            int precision = (int)TradeHelpers.GetPrecisionDecimal((decimal)lotSizeResult.Data).Data;
+            IProcessResult precisionResult = TradeHelpers.GetPrecisionDecimal((decimal)lotSizeResult.Data);
+            int precision = (int)precisionResult.Data;
 
             if (marginType == FuturesMarginType.Cross)
             {
