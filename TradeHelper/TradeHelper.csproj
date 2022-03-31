@@ -72,7 +72,7 @@
     <Compile Include="Interfaces\IKlineResult.cs" />
     <Compile Include="Interfaces\IBinancePosition.cs" />
     <Compile Include="Interfaces\INotificationProcessor.cs" />
-    <Compile Include="Interfaces\IOrderParams.cs" />
+    <Compile Include="Interfaces\IOrderType.cs" />
     <Compile Include="Interfaces\IOrderResult.cs" />
     <Compile Include="Interfaces\IPositionResult.cs" />
     <Compile Include="Interfaces\IProcessResult.cs" />

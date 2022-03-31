@@ -8,7 +8,7 @@ using TradeHelper.Interfaces;
 
 namespace TradeHelper.OrderModels
 {
-    public class StopLimit : IOrderParams
+    internal class StopLimit
     {
         public decimal LimitPrice { get; set; }
         public decimal StopPrice { get; set; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TradeHelper.Interfaces
 {
-    public interface IOrderParams
+    public interface IOrderType
     {
 
     }

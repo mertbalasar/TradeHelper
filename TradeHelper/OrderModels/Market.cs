@@ -8,7 +8,7 @@ using TradeHelper.Interfaces;
 
 namespace TradeHelper.OrderModels
 {
-    public class Market : IOrderParams
+    public class Market : IOrderType
     {
         
     }

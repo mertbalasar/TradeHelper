@@ -9,6 +9,5 @@ namespace TradeHelper.Enums
     public class EnumLibrary
     {
         public enum ProcessStatus { Success, Fail }
-        public enum PositionType { Long, Short }
     }
 }

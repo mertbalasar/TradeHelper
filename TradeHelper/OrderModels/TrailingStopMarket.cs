@@ -8,7 +8,7 @@ using TradeHelper.Interfaces;
 
 namespace TradeHelper.OrderModels
 {
-    public class TrailingStopMarket : IOrderParams
+    public class TrailingStopMarket : IOrderType
     {
         public decimal CallbackRate { get; set; }
         public decimal ActivationPrice { get; set; }

@@ -8,7 +8,7 @@ using TradeHelper.Interfaces;
 
 namespace TradeHelper.OrderModels
 {
-    public class Limit : IOrderParams
+    public class Limit : IOrderType
     {
         public decimal LimitPrice { get; set; }
         public TimeInForce TimeInForce { get; set; } = TimeInForce.GoodTillCanceled;

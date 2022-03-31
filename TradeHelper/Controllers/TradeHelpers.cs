@@ -17,7 +17,7 @@ namespace TradeHelper.Controllers
     {
         private static BinanceClient client = new BinanceClient();
 
-        public static async Task<IProcessResult> GetLotSizeFilterAsync(string symbol)
+        public static async Task<IProcessResult> GetLotSizeAmountAsync(string symbol)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
@@ -30,7 +30,45 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            result.Data = decimalResult.Data.Symbols.ToList().Where((element) => element.BaseAsset.Equals(symbol.Replace("USDT", ""))).First().LotSizeFilter.StepSize;
+            result.Data = decimalResult.Data.Symbols.ToList().Where((element) => element.BaseAsset.Equals(symbol.Replace("USDT", ""))).First().LotSizeFilter.MinQuantity;
+
+            return result;
+        }
+
+        public static async Task<IProcessResult> FilterAmountByPrecisionAsync(string symbol, decimal amount)
+        {
+            ProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            var decimalResult = await client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync();
+            if (!decimalResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = decimalResult.Error.Message;
+                return result;
+            }
+
+            int precision = decimalResult.Data.Symbols.ToList().Where((element) => element.BaseAsset.Equals(symbol.Replace("USDT", ""))).First().QuantityPrecision;
+            result.Data = Math.Round(amount, precision);
+
+            return result;
+        }
+
+        public static async Task<IProcessResult> FilterPriceByPrecisionAsync(string symbol, decimal price)
+        {
+            ProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            var decimalResult = await client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync();
+            if (!decimalResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = decimalResult.Error.Message;
+                return result;
+            }
+
+            int precision = decimalResult.Data.Symbols.ToList().Where((element) => element.BaseAsset.Equals(symbol.Replace("USDT", ""))).First().PricePrecision;
+            result.Data = Math.Round(price, precision);
 
             return result;
         }
@@ -92,17 +130,6 @@ namespace TradeHelper.Controllers
                 result.Status = ProcessStatus.Fail;
                 result.Message = "No internet connection";
             }
-
-            return result;
-        }
-
-        public static IProcessResult GetPrecisionDecimal(decimal number)
-        {
-            IProcessResult result = new ProcessResult();
-            result.Status = ProcessStatus.Success;
-
-            int count = BitConverter.GetBytes(decimal.GetBits(number)[3])[2];
-            result.Data = count;
 
             return result;
         }
