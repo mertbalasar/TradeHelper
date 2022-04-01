@@ -9,5 +9,6 @@ namespace TradeHelper.Enums
     public class EnumLibrary
     {
         public enum ProcessStatus { Success, Fail }
+        public enum OrderLocation { OpenOrders, TradeHistory }
     }
 }
