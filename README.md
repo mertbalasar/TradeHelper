@@ -26,3 +26,16 @@ Please look at the `Tutorial/TUTORIAL.md` file for details.
 ## Releases
 
 * v1.0.0
+- Created project
+* v1.1.0
+- Fixed and refactored `TradeResult` for order partition result bug
+- Fixed GMT bug for `Binance` into reports
+- Fixed TotalFee bug for `Binance` into reports
+- Fixed schedules bugs for `Strategy` class methods
+- Added `SetTakeProfitAsync`, `SetStopLossAsync`, `OpenOrderAsync` instead of `OpenPositionAsync`, `CancelOrderAsync`, `GetOrderLocationAsync`, `GetPositionDataAsync` for position data, `GetTradeDataAsync` for adding reports into `Binance`
+- Added `GetConnectionStatusAsync`, `PriceChange`, `FilterPriceByPrecisionAsync`, `FilterAmountByPrecisionAsync` instead of `GetLotSizeFilterAsync`, `GetLotSizeAmountAsync` into `TradeHelpers`
+- Added `INotificationProcessor` into `Strategy` class for e-mail notifications
+- Added `IReportProcessor` into `Strategy` class for report processes user control based
+- Added `StrategySettings` into `Strategy` that contains `RunTriggeredInterval`, `RunAlwaysDelay`, `Symbols`, `GMTForGraph` and `MailList`
+- Added `StrategyTools` into `Strategy` that contains `Binance`, `Test`, `Notification` and `Report`
+- Changed `IPositionResult`, `ITradeResult` and added `IOrderResult` new
