@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TradeHelper.AbstractClasses;
+using TradeHelper.Interfaces;
 using static TradeHelper.Enums.EnumLibrary;
 
 namespace TradeHelper.Controllers
@@ -121,6 +122,15 @@ namespace TradeHelper.Controllers
                     if ((bool)before != (bool)now && (bool)now && Triggered != null) Triggered(new object(), Strategy);
 
                     before = now;
+                }
+            });
+
+            Task.Run(async () =>
+            {
+                while (status)
+                {
+                    await Strategy.RunAlways();
+                    await Task.Delay(Strategy.Settings.RunAlwaysDelay);
                 }
             });
         }

@@ -9,6 +9,7 @@ namespace TradeHelper.Interfaces
 {
     public interface IOrderResult
     {
+        DateTime TimeStamp { get; set; }
         long OrderID { get; set; }
         string Symbol { get; set; }
         decimal Quantity { get; set; }

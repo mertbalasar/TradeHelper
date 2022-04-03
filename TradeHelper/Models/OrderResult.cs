@@ -10,6 +10,7 @@ namespace TradeHelper.Models
 {
     internal class OrderResult : IOrderResult
     {
+        public DateTime TimeStamp { get; set; }
         public long OrderID { get; set; }
         public string Symbol { get; set; }
         public decimal Quantity { get; set; }

@@ -68,7 +68,6 @@
     <Compile Include="Controllers\TestExchangeProcessor.cs" />
     <Compile Include="Controllers\TriggerProcessor.cs" />
     <Compile Include="Enums\EnumLibrary.cs" />
-    <Compile Include="Interfaces\IBindStrategy.cs" />
     <Compile Include="Interfaces\IKlineResult.cs" />
     <Compile Include="Interfaces\IBinancePosition.cs" />
     <Compile Include="Interfaces\INotificationProcessor.cs" />
@@ -78,15 +77,17 @@
     <Compile Include="Interfaces\IProcessResult.cs" />
     <Compile Include="Interfaces\IReporterDetailsResult.cs" />
     <Compile Include="Interfaces\IReporterResult.cs" />
+    <Compile Include="Interfaces\IReportProcessor.cs" />
     <Compile Include="Interfaces\ITestPosition.cs" />
     <Compile Include="Interfaces\ITradeResult.cs" />
-    <Compile Include="Models\BindStrategy.cs" />
     <Compile Include="Models\KlineResult.cs" />
     <Compile Include="Models\OrderResult.cs" />
     <Compile Include="Models\PositionResult.cs" />
     <Compile Include="Models\ProcessResult.cs" />
     <Compile Include="Models\ReporterDetailsResult.cs" />
     <Compile Include="Models\ReporterResult.cs" />
+    <Compile Include="Models\StrategySettings.cs" />
+    <Compile Include="Models\StrategyTools.cs" />
     <Compile Include="Models\TradeResult.cs" />
     <Compile Include="OrderModels\Limit.cs" />
     <Compile Include="OrderModels\Market.cs" />

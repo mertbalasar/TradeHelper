@@ -10,18 +10,16 @@ namespace TradeHelper.Interfaces
 {
     public interface IPositionResult
     {
-        long ID { get; set; }
         string Symbol { get; set; }
         DateTime EntryTime { get; set; }
-        OrderSide Side { get; set; }
+        PositionSide Side { get; set; }
         int Leverage { get; set; }
         decimal PNL { get; set; }
         decimal ROE { get; set; }
         decimal MarginUSDT { get; set; }
         decimal EntryPrice { get; set; }
         decimal MarkPrice { get; set; }
-        decimal LiqPrice { get; set; }
-        decimal AddedAmount { get; set; }
-        decimal FeeUSDT { get; set; }
+        decimal LiquidationPrice { get; set; }
+        decimal Quantity { get; set; }
     }
 }

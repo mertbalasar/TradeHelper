@@ -15,8 +15,7 @@ namespace TradeHelper
 {
     public static class StrategyBuilder
     {
-        private static List<IBindStrategy> Strategies { get; set; } = new List<IBindStrategy>();
-        private static bool runAlwaysFlag;
+        private static List<TriggerProcessor> Strategies { get; set; } = new List<TriggerProcessor>();
 
         public static IProcessResult Append(Type strategyClass)
         {
@@ -25,7 +24,7 @@ namespace TradeHelper
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IBindStrategy bound = Strategies.ToList().Where((element) => element.Strategy.GetType() == strategy.GetType()).FirstOrDefault();
+            TriggerProcessor bound = Strategies.ToList().Where((element) => element.Strategy.GetType() == strategy.GetType()).FirstOrDefault();
             if (bound != null)
             {
                 result.Status = ProcessStatus.Fail;
@@ -39,7 +38,7 @@ namespace TradeHelper
                 trigger.Strategy = strategy;
                 trigger.Triggered += Trigger_Triggered;
 
-                Strategies.Add(new BindStrategy() { Strategy = strategy, Trigger = trigger });
+                Strategies.Add(trigger);
             }
             catch (Exception e)
             {
@@ -64,18 +63,17 @@ namespace TradeHelper
 
             try
             {
-                foreach (IBindStrategy bounds in Strategies)
+                foreach (TriggerProcessor bounds in Strategies)
                 {
                     await StartedStrategy(bounds);
 
                     KlineInterval intervalParam = KlineInterval.OneMinute;
-                    if (bounds.Strategy.RunTriggeredInterval != null)
+                    if (bounds.Strategy.Settings.RunTriggeredInterval != null)
                     {
-                        intervalParam = (KlineInterval)bounds.Strategy.RunTriggeredInterval;
+                        intervalParam = (KlineInterval)bounds.Strategy.Settings.RunTriggeredInterval;
                     }
-                    bounds.Trigger.Start(intervalParam);
+                    bounds.Start(intervalParam);
                 }
-                runAlwaysFlag = true;
             }
             catch (Exception e)
             {
@@ -100,12 +98,11 @@ namespace TradeHelper
 
             try
             {
-                foreach (IBindStrategy bounds in Strategies)
+                foreach (TriggerProcessor bounds in Strategies)
                 {
-                    bounds.Trigger.Stop();
+                    bounds.Stop();
+                    bounds.Strategy.Tools.Report.ResetMembers();
                 }
-                runAlwaysFlag = false;
-                ReportProcessor.ResetMembers();
             }
             catch (Exception e)
             {
@@ -123,7 +120,7 @@ namespace TradeHelper
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IBindStrategy bound = Strategies.ToList().Where((element) => element.Strategy.GetType() == strategy.GetType()).FirstOrDefault();
+            TriggerProcessor bound = Strategies.ToList().Where((element) => element.Strategy.GetType() == strategy.GetType()).FirstOrDefault();
             if (bound == null)
             {
                 result.Status = ProcessStatus.Fail;
@@ -144,21 +141,14 @@ namespace TradeHelper
             return result;
         }
 
-        private async static Task<bool> StartedStrategy(IBindStrategy bounds)
+        private async static Task<bool> StartedStrategy(TriggerProcessor bounds)
         {
-            bounds.Strategy.Binance = new BinanceProcessor() { GMTForGraph = bounds.Strategy.GMTForGraph };
-            bounds.Strategy.Test = new TestExchangeProcessor();
-            bounds.Strategy.Notification = new NotificationProcessor() { MailList = bounds.Strategy.MailList };
+            bounds.Strategy.Tools = new StrategyTools();
+            bounds.Strategy.Tools.Binance = new BinanceProcessor() { GMTForGraph = bounds.Strategy.Settings.GMTForGraph };
+            bounds.Strategy.Tools.Test = new TestExchangeProcessor();
+            bounds.Strategy.Tools.Notification = new NotificationProcessor() { MailList = bounds.Strategy.Settings.MailList };
+            bounds.Strategy.Tools.Report = new ReportProcessor();
             await bounds.Strategy.Initialize();
-
-            Task.Run(async () =>
-            {
-                while (runAlwaysFlag)
-                {
-                    await bounds.Strategy.RunAlways();
-                    await Task.Delay(bounds.Strategy.RunAlwaysDelay);
-                }
-            });
 
             return true;
         }
@@ -168,16 +158,16 @@ namespace TradeHelper
             await Task.Delay(800);
 
             KlineInterval intervalParam = KlineInterval.OneMinute;
-            if (strategy.RunTriggeredInterval != null)
+            if (strategy.Settings.RunTriggeredInterval != null)
             {
-                intervalParam = (KlineInterval)strategy.RunTriggeredInterval;
+                intervalParam = (KlineInterval)strategy.Settings.RunTriggeredInterval;
             }
 
             List<string> symbolParam = new List<string>();
             string currentSymbol;
-            if (strategy.Symbols != null)
+            if (strategy.Settings.Symbols != null)
             {
-                foreach (string symbol in strategy.Symbols)
+                foreach (string symbol in strategy.Settings.Symbols)
                 {
                     currentSymbol = symbol.Trim().ToUpper();
                     if (!currentSymbol.EndsWith("USDT")) currentSymbol += "USDT";
@@ -185,9 +175,9 @@ namespace TradeHelper
                 }
             }
 
-            IProcessResult klineResult = await GraphicProcessor.GetKlinesAsync(symbolParam.ToArray(), intervalParam, gmt: strategy.GMTForGraph);
+            IProcessResult klineResult = await GraphicProcessor.GetKlinesAsync(symbolParam.ToArray(), intervalParam, gmt: strategy.Settings.GMTForGraph);
 
-            strategy.RunTriggered(klineResult);
+            await strategy.RunTriggered(klineResult);
         }
     }
 }

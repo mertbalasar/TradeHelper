@@ -11,12 +11,12 @@ using static TradeHelper.Enums.EnumLibrary;
 
 namespace TradeHelper.Controllers
 {
-    internal static class ReportProcessor
+    internal class ReportProcessor : IReportProcessor
     {
-        private static string path = null;
-        private static IReporterResult report = null;
+        private string path = null;
+        private IReporterResult report = null;
 
-        public static IProcessResult ResetMembers()
+        public IProcessResult ResetMembers()
         {
             path = null;
             report = null;
@@ -26,7 +26,7 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static IProcessResult AddReport(IPositionResult openedPosition)
+        public IProcessResult AddReportForOpenPosition(ITradeResult openedPosition)
         {
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
@@ -34,12 +34,12 @@ namespace TradeHelper.Controllers
             if (report == null)
             {
                 report = new ReporterResult();
-                report.StartTime = openedPosition.EntryTime;
+                report.StartTime = openedPosition.TimeStamp;
                 report.Details = new List<IReporterDetailsResult>();
             }
 
             report.Details.Add(new ReporterDetailsResult() { OpenPosition = openedPosition });
-            report.EndTime = openedPosition.EntryTime;
+            report.EndTime = openedPosition.TimeStamp;
             report.TotalElapsedTime = report.EndTime - report.StartTime;
             report.TotalFee += openedPosition.FeeUSDT;
 
@@ -54,7 +54,7 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static IProcessResult AddReport(ITradeResult closedPosition)
+        public IProcessResult AddReportForClosePosition(ITradeResult closedPosition)
         {
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
@@ -62,13 +62,14 @@ namespace TradeHelper.Controllers
             if (report == null)
             {
                 report = new ReporterResult();
-                report.StartTime = closedPosition.CloseTime;
+                report.StartTime = closedPosition.TimeStamp;
                 report.Details = new List<IReporterDetailsResult>();
             }
 
             report.Details.Add(new ReporterDetailsResult() { ClosePosition = closedPosition });
-            report.EndTime = closedPosition.CloseTime;
+            report.EndTime = closedPosition.TimeStamp;
             report.TotalElapsedTime = report.EndTime - report.StartTime;
+            report.TotalFee += closedPosition.FeeUSDT;
             report.TotalPositionCount += 1;
 
             if (closedPosition.PNL - closedPosition.FeeUSDT > 0)
@@ -85,8 +86,7 @@ namespace TradeHelper.Controllers
                 report.AccuracyRatio = (100 * report.ProfitedPositionCount) / report.TotalPositionCount;
             }           
             report.RealizedPNL += closedPosition.PNL - closedPosition.FeeUSDT;
-            report.TotalFee += closedPosition.FeeUSDT;
-
+            
             IProcessResult saveResult = SaveReport(report);
             if (saveResult.Status == ProcessStatus.Fail)
             {
@@ -98,7 +98,7 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        private static IProcessResult SaveReport(IReporterResult data)
+        private IProcessResult SaveReport(IReporterResult data)
         {
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;

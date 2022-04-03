@@ -11,8 +11,8 @@ namespace TradeHelper.Models
     {
         public string Symbol { get; set; }
         public decimal PNL { get; set; }
-        public DateTime CloseTime { get; set; }
-        public decimal ClosePrice { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public decimal Price { get; set; }
         public decimal FeeUSDT { get; set; }
     }
 }

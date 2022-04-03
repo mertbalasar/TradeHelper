@@ -164,6 +164,7 @@ namespace TradeHelper.Controllers
 
             OrderResult orderResult = new OrderResult() 
             { 
+                TimeStamp = placedOrder.UpdateTime,
                 OrderID = placedOrder.Id, 
                 Symbol = placedOrder.Symbol, 
                 OrderType = placedOrder.Type,
@@ -181,7 +182,38 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> GetOrderStatus(IOrderResult order)
+        public async Task<IProcessResult> CancelOrderAsync(IOrderResult openedOrder)
+        {
+            ProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            IProcessResult orderLocationResult = await GetOrderLocationAsync(openedOrder);
+            if (orderLocationResult.Status == ProcessStatus.Fail)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = orderLocationResult.Message;
+                return result;
+            }
+
+            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenOrders)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = "The given order is not located in open orders";
+                return result;
+            }
+
+            var cancelOrderResult = await client.UsdFuturesApi.Trading.CancelOrderAsync(openedOrder.Symbol, orderId: openedOrder.OrderID);
+            if (!cancelOrderResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = cancelOrderResult.Error.Message;
+                return result;
+            }
+
+            return result;
+        }
+
+        public async Task<IProcessResult> GetOrderLocationAsync(IOrderResult order)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
@@ -203,43 +235,173 @@ namespace TradeHelper.Controllers
             }
             else
             {
-                result.Data = OrderLocation.TradeHistory;
+                var userTradeResult = await client.UsdFuturesApi.Trading.GetUserTradesAsync(order.Symbol);
+                if (!userTradeResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = userTradeResult.Error.Message;
+                    return result;
+                }
+
+                List<BinanceFuturesUsdtTrade> tradeList = userTradeResult.Data.ToList().Where((element) => element.OrderId == order.OrderID).ToList();
+
+                decimal? totalPNL = null;
+                foreach (BinanceFuturesUsdtTrade trade in tradeList)
+                {
+                    if (totalPNL == null) totalPNL = 0;
+                    totalPNL += trade.RealizedPnl;
+                }
+
+                if (totalPNL == null)
+                {
+                    result.Data = OrderLocation.Unknown;
+                }
+                else if ((decimal)totalPNL == 0)
+                {
+                    result.Data = OrderLocation.OpenPositions;
+                }
+                else
+                {
+                    result.Data = OrderLocation.TradeHistory;
+                }
+
                 return result;
             }
         }
 
-        public async Task<IProcessResult> SetTakeProfitAsync(IOrderResult openedOrder, decimal netPrice, WorkingType priceType = WorkingType.Contract)
+        public async Task<IProcessResult> GetPositionDataAsync(IOrderResult order)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderStatusResult = await GetOrderStatus(openedOrder);
-            if (orderStatusResult.Status == ProcessStatus.Fail)
+            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
-                result.Message = orderStatusResult.Message;
+                result.Message = orderLocationResult.Message;
                 return result;
             }
 
-            if ((OrderLocation)orderStatusResult.Data == OrderLocation.OpenOrders)
+            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenPositions)
             {
                 result.Status = ProcessStatus.Fail;
-                result.Message = "The given order is still open";
+                result.Message = "The given order is not located in positions";
+                return result;
+            }
+
+            var positionInformationResult = await client.UsdFuturesApi.Account.GetPositionInformationAsync(symbol: order.Symbol);
+            if (!positionInformationResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = positionInformationResult.Error.Message;
+                return result;
+            }
+
+            PositionResult positionData = new PositionResult();
+            var positionDetails = positionInformationResult.Data.ToList().FirstOrDefault();
+
+            positionData.Symbol = positionDetails.Symbol;
+            positionData.EntryTime = positionDetails.UpdateTime.AddHours(GMTForGraph);
+            positionData.Side = positionDetails.PositionSide;
+            positionData.PNL = positionDetails.UnrealizedPnl; // as USDT
+            positionData.ROE = 100 * positionDetails.UnrealizedPnl / (positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage);
+            positionData.MarginUSDT = positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage; // as USDT
+            positionData.LiquidationPrice = positionDetails.LiquidationPrice;
+            positionData.Leverage = positionDetails.Leverage;
+            positionData.EntryPrice = positionDetails.EntryPrice;
+            positionData.MarkPrice = positionDetails.MarkPrice;
+            positionData.Quantity = positionDetails.Quantity;
+
+            result.Data = positionData;
+
+            return result;
+        }
+
+        public async Task<IProcessResult> GetTradeDataAsync(IOrderResult order)
+        {
+            ProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            if (orderLocationResult.Status == ProcessStatus.Fail)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = orderLocationResult.Message;
+                return result;
+            }
+
+            if ((OrderLocation)orderLocationResult.Data != OrderLocation.TradeHistory)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = "The given order is not located in trade history";
+                return result;
+            }
+
+            var userTradesResult = await client.UsdFuturesApi.Trading.GetUserTradesAsync(order.Symbol);
+            if (!userTradesResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = userTradesResult.Error.Message;
+                return result;
+            }
+
+            TradeResult tradeData = new TradeResult();
+            List<BinanceFuturesUsdtTrade> tradeDetails = userTradesResult.Data.ToList().Where((element) => element.OrderId == order.OrderID).ToList();
+
+            foreach (BinanceFuturesUsdtTrade trade in tradeDetails)
+            {
+                tradeData.Symbol = trade.Symbol;
+                tradeData.PNL += trade.RealizedPnl;
+                tradeData.FeeUSDT += trade.Fee;
+                tradeData.TimeStamp = trade.Timestamp;
+                tradeData.Price = trade.Price;
+            }
+
+            result.Data = tradeData;
+
+            return result;
+        }
+
+        public async Task<IProcessResult> SetTakeProfitAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract)
+        {
+            ProcessResult result = new ProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            if (orderLocationResult.Status == ProcessStatus.Fail)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = orderLocationResult.Message;
+                return result;
+            }
+
+            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenPositions)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = "The given order is not located in positions";
                 return result;
             }
 
             OrderSide newSide;
-            if (openedOrder.OrderSide == OrderSide.Buy) newSide = OrderSide.Sell;
+            if (order.OrderSide == OrderSide.Buy) newSide = OrderSide.Sell;
             else newSide = OrderSide.Buy;
 
+            IProcessResult roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(order.Symbol, netPrice);
+            if (roundedPriceResult.Status == ProcessStatus.Fail)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = roundedPriceResult.Message;
+                return result;
+            }
+
             var orderResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(
-                openedOrder.Symbol,
+                order.Symbol,
                 newSide,
                 FuturesOrderType.TakeProfitMarket,  
                 quantity: null,
                 reduceOnly: true,
                 closePosition: true,
-                stopPrice: netPrice,
+                stopPrice: (decimal)roundedPriceResult.Data,
                 workingType: priceType);
             if (!orderResult.Success)
             {
@@ -251,130 +413,55 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> SetStopLossAsync(IOrderResult openedOrder, decimal? netPrice = null, decimal? percentPrice = null)
+        public async Task<IProcessResult> SetStopLossAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract)
         {
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderStatusResult = await GetOrderStatus(openedOrder);
-            if (orderStatusResult.Status == ProcessStatus.Fail)
+            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
-                result.Message = orderStatusResult.Message;
+                result.Message = orderLocationResult.Message;
                 return result;
             }
 
-            if ((OrderLocation)orderStatusResult.Data == OrderLocation.OpenOrders)
+            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenPositions)
             {
                 result.Status = ProcessStatus.Fail;
-                result.Message = "The given order is still open";
+                result.Message = "The given order is not located in positions";
                 return result;
             }
 
-            futuresOrderType = FuturesOrderType.StopMarket;
-            StopMarket stopMarket = (StopMarket)orderType;
-            var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, side, futuresOrderType, reCalculatedAmount, reduceOnly: reduceOnly,
-                stopPrice: stopMarket.StopPrice,
-                workingType: stopMarket.StopPriceType);
-            if (!positionResult.Success)
+            OrderSide newSide;
+            if (order.OrderSide == OrderSide.Buy) newSide = OrderSide.Sell;
+            else newSide = OrderSide.Buy;
+
+            IProcessResult roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(order.Symbol, netPrice);
+            if (roundedPriceResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
-                result.Message = positionResult.Error.Message;
+                result.Message = roundedPriceResult.Message;
                 return result;
             }
 
-            placedOrder = positionResult.Data;
+            var orderResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(
+                order.Symbol,
+                newSide,
+                FuturesOrderType.StopMarket,
+                quantity: null,
+                reduceOnly: true,
+                closePosition: true,
+                stopPrice: (decimal)roundedPriceResult.Data,
+                workingType: priceType);
+            if (!orderResult.Success)
+            {
+                result.Status = ProcessStatus.Fail;
+                result.Message = orderResult.Error.Message;
+                return result;
+            }
 
             return result;
-        }
-
-        public async Task<IProcessResult> GetIsOrderFilledAsync(IOrderResult openedOrder)
-        {
-            ProcessResult result = new ProcessResult();
-            result.Status = ProcessStatus.Success;
-
-            var openOrderResult = await client.UsdFuturesApi.Trading.GetOpenOrdersAsync();
-            if (!openOrderResult.Success)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = openOrderResult.Error.Message;
-                return result;
-            }
-
-            List<BinanceFuturesOrder> orderList = openOrderResult.Data.ToList().Where((element) => element.Id == openedOrder.OrderID).ToList();
-
-            // ORDERLIST EĞER VERİLEN NUMARALI ORDER AÇIKSA COUNT > 0 ŞEKLİNDE BİR LİSTE OLUYOR, YOKSA COUNT = 0 OLUYOR FAKAT HİÇBİR ZAMAN NULL OLMUYOR
-            if (orderList.Count > 0)
-            {
-                return result;
-            }
-            else
-            {
-                var positionInfoResult = await client.UsdFuturesApi.Trading.GetUserTradesAsync(order.Symbol);
-                if (!positionInfoResult.Success)
-                {
-                    result.Status = ProcessStatus.Fail;
-                    result.Message = positionInfoResult.Error.Message;
-                    return result;
-                }
-
-                if (openedOrder.OrderType == FuturesOrderType.Limit || openedOrder.OrderType == FuturesOrderType.Market)
-                {
-                    List<BinanceFuturesUsdtTrade> tradeDetails = positionInfoResult.Data.ToList().Where((element) => element.OrderId == openedOrder.OrderID).ToList();
-                    PositionResult positionData = new PositionResult();
-
-                    if (tradeDetails != null && tradeDetails.Count > 0)
-                    {
-                        foreach (BinanceFuturesUsdtTrade trade in tradeDetails)
-                        {
-                            positionData.Symbol = trade.Symbol;
-                            positionData.EntryTime = trade.Timestamp.AddHours(GMTForGraph);
-                            positionData.Side = trade.Side;
-                            positionData.EntryPrice = trade.Price;
-                            positionData.AddedAmount += trade.Quantity;
-                        }
-                    }
-
-                    result.Data = positionData;
-
-                    IProcessResult reportResult = ReportProcessor.AddReport(positionData);
-                    if (reportResult.Status == ProcessStatus.Fail)
-                    {
-                        result.Status = ProcessStatus.Fail;
-                        result.Message = reportResult.Message;
-                        return result;
-                    }
-                }
-                else
-                {
-                    List<BinanceFuturesUsdtTrade> tradeDetails = positionInfoResult.Data.ToList().Where((element) => element.OrderId == openedOrder.OrderID).ToList();
-                    TradeResult tradeData = new TradeResult();
-
-                    if (tradeDetails != null && tradeDetails.Count > 0)
-                    {
-                        foreach (BinanceFuturesUsdtTrade trade in tradeDetails)
-                        {
-                            tradeData.Symbol = trade.Symbol;
-                            tradeData.ClosePrice = trade.Price;
-                            tradeData.CloseTime = trade.Timestamp.AddHours(GMTForGraph);
-                            tradeData.PNL += trade.RealizedPnl;
-                            tradeData.FeeUSDT += trade.Fee;
-                        }
-                    }
-
-                    result.Data = tradeData;
-
-                    IProcessResult reportResult = ReportProcessor.AddReport(tradeData);
-                    if (reportResult.Status == ProcessStatus.Fail)
-                    {
-                        result.Status = ProcessStatus.Fail;
-                        result.Message = reportResult.Message;
-                        return result;
-                    }
-                }
-
-                return result;
-            }
         }
 
         public async Task<IProcessResult> ClosePositionAsync(IPositionResult openedPosition)
@@ -385,15 +472,15 @@ namespace TradeHelper.Controllers
             if (openedPosition == null)
             {
                 result.Status = ProcessStatus.Fail;
-                result.Message = "Not opened any position in yet";
+                result.Message = "The given position is null";
                 return result;
             }
 
             OrderSide side;
-            if (openedPosition.Side == OrderSide.Buy) side = OrderSide.Sell;
+            if (openedPosition.Side == PositionSide.Long) side = OrderSide.Sell;
             else side = OrderSide.Buy;
 
-            var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(openedPosition.Symbol, side, FuturesOrderType.Market, openedPosition.AddedAmount, reduceOnly: true);
+            var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(openedPosition.Symbol, side, FuturesOrderType.Market, openedPosition.Quantity, reduceOnly: true);
             if (!positionResult.Success)
             {
                 result.Status = ProcessStatus.Fail;
@@ -401,100 +488,22 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            var positionInfoResult = await client.UsdFuturesApi.Trading.GetUserTradesAsync(openedPosition.Symbol);
-            if (!positionInfoResult.Success)
+            OrderResult orderResult = new OrderResult()
             {
-                result.Status = ProcessStatus.Fail;
-                result.Message = positionInfoResult.Error.Message;
-                return result;
-            }
-
-            List<BinanceFuturesUsdtTrade> tradeDetailsForSell = positionInfoResult.Data.ToList().Where((element) => element.OrderId == positionResult.Data.Id).ToList();
-
-            TradeResult tradeData = new TradeResult();
-            tradeData.PNL = 0;
-            tradeData.FeeUSDT = 0;
-            tradeData.Symbol = openedPosition.Symbol;
-
-            if (tradeDetailsForSell != null && tradeDetailsForSell.Count > 0)
-            {
-                foreach (BinanceFuturesUsdtTrade trade in tradeDetailsForSell)
-                {
-                    tradeData.ClosePrice = trade.Price;
-                    tradeData.CloseTime = trade.Timestamp.AddHours(GMTForGraph);
-                    tradeData.PNL += trade.RealizedPnl;
-                    tradeData.FeeUSDT += trade.Fee;
-                }
-            }
-
-            result.Data = tradeData;
-            IProcessResult reportResult = ReportProcessor.AddReport(tradeData);
-            if (reportResult.Status == ProcessStatus.Fail)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = reportResult.Message;
-                return result;
-            }
-
-            return result;
-        }
-
-        public async Task<IProcessResult> CancelOrderAsync(IOrderResult openedOrder)
-        {
-            ProcessResult result = new ProcessResult();
-            result.Status = ProcessStatus.Success;
-
-            var closeOrderResult = await client.UsdFuturesApi.Trading.CancelOrderAsync(openedOrder.Symbol, orderId: openedOrder.OrderID);
-            if (!closeOrderResult.Success)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = closeOrderResult.Error.Message;
-                return result;
-            }
-
-            return result;
-        }
-
-        public async Task<IProcessResult> GetPositionDataAsync(IPositionResult openedPosition)
-        {
-            ProcessResult result = new ProcessResult();
-            result.Status = ProcessStatus.Success;
-
-            var openOrderResult = await client.UsdFuturesApi.Account.GetPositionInformationAsync(symbol: openedPosition.Symbol);
-            if (!openOrderResult.Success)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = openOrderResult.Error.Message;
-                return result;
-            }
-
-            PositionResult positionData = new PositionResult();
-            var positionDetails = openOrderResult.Data.ToList().FirstOrDefault();
-
-            if (positionDetails != null && positionDetails.Quantity == 0)
-            {
-                result.Status = ProcessStatus.Fail;
-                result.Message = "Can not find any open position";
-                return result;
-            }
-
-            OrderSide side;
-            if (positionDetails.PositionSide == PositionSide.Long) side = OrderSide.Buy;
-            else side = OrderSide.Sell;
-
-            positionData.Symbol = positionDetails.Symbol;
-            positionData.EntryTime = positionDetails.UpdateTime.AddHours(GMTForGraph);
-            positionData.Side = side;
-            positionData.PNL = positionDetails.UnrealizedPnl; // as USDT
-            positionData.ROE = 100 * positionDetails.UnrealizedPnl / (positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage);
-            positionData.MarginUSDT = positionDetails.Quantity * positionDetails.EntryPrice / positionDetails.Leverage; // as USDT
-            positionData.LiqPrice = positionDetails.LiquidationPrice;
-            positionData.Leverage = positionDetails.Leverage;
-            positionData.EntryPrice = positionDetails.EntryPrice;
-            positionData.MarkPrice = positionDetails.MarkPrice;
-            positionData.AddedAmount = positionDetails.Quantity;
-
-            result.Data = positionData;
+                TimeStamp = positionResult.Data.UpdateTime,
+                OrderID = positionResult.Data.Id,
+                Symbol = positionResult.Data.Symbol,
+                OrderType = positionResult.Data.Type,
+                OrderSide = positionResult.Data.Side,
+                Quantity = positionResult.Data.Quantity,
+                PositionSide = positionResult.Data.PositionSide,
+                ReduceOnly = positionResult.Data.ReduceOnly,
+                ClosePosition = positionResult.Data.ClosePosition,
+                ActivatePrice = positionResult.Data.ActivatePrice,
+                PriceType = positionResult.Data.WorkingType,
+                TimeInForce = positionResult.Data.TimeInForce
+            };
+            result.Data = orderResult;
 
             return result;
         }

@@ -9,7 +9,7 @@ namespace TradeHelper.Models
 {
     internal class ReporterDetailsResult : IReporterDetailsResult
     {
-        public IPositionResult OpenPosition { get; set; }
+        public ITradeResult OpenPosition { get; set; }
         public ITradeResult ClosePosition { get; set; }
     }
 }

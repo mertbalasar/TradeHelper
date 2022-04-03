@@ -8,7 +8,7 @@ namespace TradeHelper.Interfaces
 {
     internal interface IReporterDetailsResult
     {
-        IPositionResult OpenPosition { get; set; }
+        ITradeResult OpenPosition { get; set; }
         ITradeResult ClosePosition { get; set; }
     }
 }

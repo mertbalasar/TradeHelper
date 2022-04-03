@@ -10,18 +10,16 @@ namespace TradeHelper.Models
 {
     internal class PositionResult : IPositionResult
     {
-        public long ID { get; set; }
         public string Symbol { get; set; }
         public DateTime EntryTime { get; set; }
-        public OrderSide Side { get; set; }
+        public PositionSide Side { get; set; }
         public int Leverage { get; set; }
         public decimal PNL { get; set; }
         public decimal ROE { get; set; }    
         public decimal MarginUSDT { get; set; }
         public decimal EntryPrice { get; set; }
         public decimal MarkPrice { get; set; }
-        public decimal LiqPrice { get; set; }
-        public decimal AddedAmount { get; set; }
-        public decimal FeeUSDT { get; set; }
+        public decimal LiquidationPrice { get; set; }
+        public decimal Quantity { get; set; }
     }
 }

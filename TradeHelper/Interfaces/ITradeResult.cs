@@ -10,8 +10,8 @@ namespace TradeHelper.Interfaces
     {
         string Symbol { get; set; }
         decimal PNL { get; set; }
-        DateTime CloseTime { get; set; }
-        decimal ClosePrice { get; set; }
+        DateTime TimeStamp { get; set; }
+        decimal Price { get; set; }
         decimal FeeUSDT { get; set; }
     }
 }
