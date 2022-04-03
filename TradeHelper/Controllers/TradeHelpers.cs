@@ -119,7 +119,7 @@ namespace TradeHelper.Controllers
             return quotes;
         }
 
-        public static async Task<IProcessResult> GetConnectionStatus()
+        public static async Task<IProcessResult> GetConnectionStatusAsync()
         {
             IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
