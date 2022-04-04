@@ -39,3 +39,5 @@ Please look at the `Tutorial/TUTORIAL.md` file for details.
 - Added `StrategySettings` into `Strategy` that contains `RunTriggeredInterval`, `RunAlwaysDelay`, `Symbols`, `GMTForGraph` and `MailList`
 - Added `StrategyTools` into `Strategy` that contains `Binance`, `Test`, `Notification` and `Report`
 - Changed `IPositionResult`, `ITradeResult` and added `IOrderResult` new
+* v1.2.0
+- Changed `IProcessResult` struct with `IProcessResult<T>`
