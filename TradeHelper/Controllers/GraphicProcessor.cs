@@ -18,9 +18,9 @@ namespace TradeHelper.Controllers
     {
         private static BinanceClient client = new BinanceClient();
 
-        public static async Task<IProcessResult> GetUSDTFromAssetAsync(string symbol, decimal amountAsset)
+        public static async Task<IProcessResult<decimal>> GetUSDTFromAssetAsync(string symbol, decimal amountAsset)
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             string currentSymbol = symbol.Trim().ToUpper();
@@ -39,9 +39,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> GetAssetFromUSDTAsync(string symbol, decimal amountUSDT)
+        public static async Task<IProcessResult<decimal>> GetAssetFromUSDTAsync(string symbol, decimal amountUSDT)
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             string currentSymbol = symbol.Trim().ToUpper();
@@ -60,9 +60,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> GetKlinesAsync(string[] symbols, KlineInterval interval, int gmt = 0)
+        public static async Task<IProcessResult<List<IKlineResult>>> GetKlinesAsync(string[] symbols, KlineInterval interval, int gmt = 0)
         {
-            ProcessResult result = new ProcessResult();
+            KlineProcessResult result = new KlineProcessResult();
             result.Status = ProcessStatus.Success;
 
             List<IKlineResult> klines = new List<IKlineResult>();
@@ -87,7 +87,7 @@ namespace TradeHelper.Controllers
                     kline.OpenTime = kline.OpenTime.AddHours(gmt);
                 }
 
-                quotes = TradeHelpers.GetQuotes(klineResult.Data.ToList());
+                quotes = TradeHelpers.GetQuotes(klineResult.Data.ToList()).Data;
 
                 foreach (Quote kline in quotes)
                 {
@@ -102,9 +102,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> GetKlinesAsync(KlineInterval interval, int gmt = 0)
+        public static async Task<IProcessResult<List<IKlineResult>>> GetKlinesAsync(KlineInterval interval, int gmt = 0)
         {
-            ProcessResult result = new ProcessResult();
+            KlineProcessResult result = new KlineProcessResult();
             result.Status = ProcessStatus.Success;
 
             var pricesResult = await client.UsdFuturesApi.ExchangeData.GetPricesAsync();
@@ -133,7 +133,7 @@ namespace TradeHelper.Controllers
                     kline.OpenTime = kline.OpenTime.AddHours(gmt);
                 }
 
-                quotes = TradeHelpers.GetQuotes(klineResult.Data.ToList());
+                quotes = TradeHelpers.GetQuotes(klineResult.Data.ToList()).Data;
 
                 foreach (Quote kline in quotes)
                 {
@@ -148,9 +148,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> GetCurrentPriceAsync(string symbol)
+        public static async Task<IProcessResult<decimal>> GetCurrentPriceAsync(string symbol)
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             string currentSymbol = symbol.Trim().ToUpper();
@@ -169,9 +169,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> GetAllSymbolsAsync()
+        public static async Task<IProcessResult<List<string>>> GetAllSymbolsAsync()
         {
-            ProcessResult result = new ProcessResult();
+            StringListProcessResult result = new StringListProcessResult();
             result.Status = ProcessStatus.Success;
 
             var priceResult = await client.UsdFuturesApi.ExchangeData.GetPricesAsync();

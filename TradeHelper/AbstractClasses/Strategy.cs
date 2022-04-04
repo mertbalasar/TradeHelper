@@ -17,6 +17,6 @@ namespace TradeHelper.AbstractClasses
 
         public abstract Task<bool> Initialize();
         public abstract Task<bool> RunAlways();
-        public abstract Task<bool> RunTriggered(IProcessResult Graphic);
+        public abstract Task<bool> RunTriggered(IProcessResult<List<IKlineResult>> Graphic);
     }
 }

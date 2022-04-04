@@ -24,15 +24,15 @@ namespace TradeHelper.Controllers
             client = new BinanceClient();
         }
 
-        public async Task<IProcessResult> OpenPositionAsync(string symbol, decimal costAmount, int leverage, PositionSide positionSide)
+        public async Task<IProcessResult<ITradeResult>> OpenPositionAsync(string symbol, decimal costAmount, int leverage, PositionSide positionSide)
         {
-            ProcessResult result = new ProcessResult();
+            TradeProcessResult result = new TradeProcessResult();
             result.Status = ProcessStatus.Success;
 
             string currentSymbol = symbol.Trim().ToUpper();
             if (!currentSymbol.EndsWith("USDT")) currentSymbol += "USDT";
 
-            IProcessResult priceResult = await GraphicProcessor.GetCurrentPriceAsync(currentSymbol);
+            var priceResult = await GraphicProcessor.GetCurrentPriceAsync(currentSymbol);
             if (priceResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -40,19 +40,17 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            decimal liqPrice = (decimal)priceResult.Data / leverage;
+            decimal liqPrice = priceResult.Data / leverage;
             if (positionSide == PositionSide.Long) liqPrice = (decimal)priceResult.Data - liqPrice;
-            else liqPrice = (decimal)priceResult.Data + liqPrice;
+            else liqPrice = priceResult.Data + liqPrice;
 
-            IProcessResult marginUsdtResult = await GraphicProcessor.GetUSDTFromAssetAsync(currentSymbol, costAmount);
+            var marginUsdtResult = await GraphicProcessor.GetUSDTFromAssetAsync(currentSymbol, costAmount);
             if (marginUsdtResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = marginUsdtResult.Message;
                 return result;
             }
-
-            decimal marginUsdt = (decimal)marginUsdtResult.Data;
 
             TradeResult tradeData = new TradeResult();
 
@@ -68,14 +66,14 @@ namespace TradeHelper.Controllers
             inputLeverage = leverage;
             inputPositionSide = positionSide;
             inputLiqPrice = liqPrice;
-            inputMarginUSDT = marginUsdt;
+            inputMarginUSDT = marginUsdtResult.Data;
 
             return result;
         }
 
-        public async Task<IProcessResult> ClosePositionAsync(ITradeResult openedPosition)
+        public async Task<IProcessResult<ITradeResult>> ClosePositionAsync(ITradeResult openedPosition)
         {
-            ProcessResult result = new ProcessResult();
+            TradeProcessResult result = new TradeProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (openedPosition == null)
@@ -85,7 +83,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            IProcessResult priceResult = await GraphicProcessor.GetCurrentPriceAsync(openedPosition.Symbol);
+            var priceResult = await GraphicProcessor.GetCurrentPriceAsync(openedPosition.Symbol);
             if (priceResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -93,7 +91,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            IProcessResult percentResult = TradeHelpers.PercentChange(openedPosition.Price, (decimal)priceResult.Data);
+            var percentResult = TradeHelpers.PercentChange(openedPosition.Price, priceResult.Data);
             if (percentResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -101,12 +99,12 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            decimal pnl = inputMarginUSDT * ((decimal)percentResult.Data * inputLeverage) / 100;
+            decimal pnl = inputMarginUSDT * (percentResult.Data * inputLeverage) / 100;
             if (inputPositionSide == PositionSide.Short) pnl *= -1;
 
             TradeResult tradeData = new TradeResult();
 
-            tradeData.Price = (decimal)priceResult.Data;
+            tradeData.Price = priceResult.Data;
             tradeData.TimeStamp = DateTime.Now;
             tradeData.PNL = pnl;
             tradeData.Symbol = openedPosition.Symbol;
@@ -117,9 +115,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> GetPositionDataAsync(ITradeResult openedPosition)
+        public async Task<IProcessResult<IPositionResult>> GetPositionDataAsync(ITradeResult openedPosition)
         {
-            ProcessResult result = new ProcessResult();
+            PositionProcessResult result = new PositionProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (openedPosition == null)
@@ -129,7 +127,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            IProcessResult priceResult = await GraphicProcessor.GetCurrentPriceAsync(openedPosition.Symbol);
+            var priceResult = await GraphicProcessor.GetCurrentPriceAsync(openedPosition.Symbol);
             if (priceResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -137,7 +135,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            IProcessResult percentResult = TradeHelpers.PercentChange(openedPosition.Price, (decimal)priceResult.Data);
+            var percentResult = TradeHelpers.PercentChange(openedPosition.Price, priceResult.Data);
             if (percentResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -145,7 +143,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            decimal roe = (decimal)percentResult.Data * inputLeverage;
+            decimal roe = percentResult.Data * inputLeverage;
             decimal pnl = inputMarginUSDT * roe / 100;
             if (inputPositionSide == PositionSide.Short)
             {
@@ -164,7 +162,7 @@ namespace TradeHelper.Controllers
             positionData.LiquidationPrice = inputLiqPrice;
             positionData.Leverage = inputLeverage;
             positionData.EntryPrice = openedPosition.Price;
-            positionData.MarkPrice = (decimal)priceResult.Data;
+            positionData.MarkPrice = priceResult.Data;
             positionData.Quantity = inputQuantity;
 
             result.Data = positionData;

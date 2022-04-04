@@ -19,7 +19,7 @@ namespace TradeHelper.Controllers
 
         public IProcessResult SendMail(string subject, string content)
         {
-            IProcessResult result = new ProcessResult();
+            ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
             try

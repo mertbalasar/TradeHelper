@@ -175,7 +175,7 @@ namespace TradeHelper
                 }
             }
 
-            IProcessResult klineResult = await GraphicProcessor.GetKlinesAsync(symbolParam.ToArray(), intervalParam, gmt: strategy.Settings.GMTForGraph);
+            var klineResult = await GraphicProcessor.GetKlinesAsync(symbolParam.ToArray(), intervalParam, gmt: strategy.Settings.GMTForGraph);
 
             await strategy.RunTriggered(klineResult);
         }

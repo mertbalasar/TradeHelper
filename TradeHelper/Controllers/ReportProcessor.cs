@@ -21,14 +21,14 @@ namespace TradeHelper.Controllers
             path = null;
             report = null;
 
-            IProcessResult result = new ProcessResult();
+            ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
             return result;
         }
 
         public IProcessResult AddReportForOpenPosition(ITradeResult openedPosition)
         {
-            IProcessResult result = new ProcessResult();
+            ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (report == null)
@@ -56,7 +56,7 @@ namespace TradeHelper.Controllers
 
         public IProcessResult AddReportForClosePosition(ITradeResult closedPosition)
         {
-            IProcessResult result = new ProcessResult();
+            ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (report == null)
@@ -100,7 +100,7 @@ namespace TradeHelper.Controllers
 
         private IProcessResult SaveReport(IReporterResult data)
         {
-            IProcessResult result = new ProcessResult();
+            ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (string.IsNullOrEmpty(path))

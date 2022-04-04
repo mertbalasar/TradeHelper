@@ -10,8 +10,8 @@ namespace TradeHelper.Interfaces
 {
     public interface ITestPosition
     {
-        Task<IProcessResult> OpenPositionAsync(string symbol, decimal costAmount, int leverage, PositionSide positionSide);
-        Task<IProcessResult> ClosePositionAsync(ITradeResult openedPosition);
-        Task<IProcessResult> GetPositionDataAsync(ITradeResult openedPosition);
+        Task<IProcessResult<ITradeResult>> OpenPositionAsync(string symbol, decimal costAmount, int leverage, PositionSide positionSide);
+        Task<IProcessResult<ITradeResult>> ClosePositionAsync(ITradeResult openedPosition);
+        Task<IProcessResult<IPositionResult>> GetPositionDataAsync(ITradeResult openedPosition);
     }
 }

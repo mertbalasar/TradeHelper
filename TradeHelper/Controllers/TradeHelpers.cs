@@ -17,9 +17,9 @@ namespace TradeHelper.Controllers
     {
         private static BinanceClient client = new BinanceClient();
 
-        public static async Task<IProcessResult> GetLotSizeAmountAsync(string symbol)
+        public static async Task<IProcessResult<decimal>> GetLotSizeAmountAsync(string symbol)
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             var decimalResult = await client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync();
@@ -35,9 +35,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> FilterAmountByPrecisionAsync(string symbol, decimal amount)
+        public static async Task<IProcessResult<decimal>> FilterAmountByPrecisionAsync(string symbol, decimal amount)
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             var decimalResult = await client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync();
@@ -54,9 +54,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static async Task<IProcessResult> FilterPriceByPrecisionAsync(string symbol, decimal price)
+        public static async Task<IProcessResult<decimal>> FilterPriceByPrecisionAsync(string symbol, decimal price)
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             var decimalResult = await client.UsdFuturesApi.ExchangeData.GetExchangeInfoAsync();
@@ -73,9 +73,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static IProcessResult PercentChange(decimal firstPrice, decimal lastPrice)
+        public static IProcessResult<decimal> PercentChange(decimal firstPrice, decimal lastPrice)
         {
-            IProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (firstPrice == 0)
@@ -90,9 +90,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static IProcessResult PriceChange(decimal price, decimal percentChange)
+        public static IProcessResult<decimal> PriceChange(decimal price, decimal percentChange)
         {
-            IProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
 
             result.Status = ProcessStatus.Success;
             result.Data = ((percentChange / 100) * price) + price;
@@ -100,8 +100,11 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public static List<Quote> GetQuotes(List<IBinanceKline> allKlines)
+        public static IProcessResult<List<Quote>> GetQuotes(List<IBinanceKline> allKlines)
         {
+            QuoteProcessResult result = new QuoteProcessResult();
+            result.Status = ProcessStatus.Success;
+
             List<Quote> quotes = new List<Quote>();
 
             foreach (IBinanceKline kline in allKlines)
@@ -116,12 +119,14 @@ namespace TradeHelper.Controllers
                 });
             }
 
-            return quotes;
+            result.Data = quotes;
+
+            return result;
         }
 
         public static async Task<IProcessResult> GetConnectionStatusAsync()
         {
-            IProcessResult result = new ProcessResult();
+            ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
             var priceResult = await client.UsdFuturesApi.ExchangeData.GetPriceAsync("BTCUSDT");

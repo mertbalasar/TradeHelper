@@ -44,21 +44,19 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> OpenOrderAsync(string symbol, decimal costAmount, OrderSide orderSide, int leverage, IOrderType orderType, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false)
+        public async Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, decimal costAmount, OrderSide orderSide, int leverage, IOrderType orderType, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false)
         {
-            ProcessResult result = new ProcessResult();
+            OrderProcessResult result = new OrderProcessResult();
             result.Status = ProcessStatus.Success;
 
             #region RoundAmount
-            IProcessResult roundedAmountResult = await TradeHelpers.FilterAmountByPrecisionAsync(symbol, costAmount * leverage);
+            var roundedAmountResult = await TradeHelpers.FilterAmountByPrecisionAsync(symbol, costAmount * leverage);
             if (roundedAmountResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = roundedAmountResult.Message;
                 return result;
             }
-
-            decimal reCalculatedAmount = (decimal)roundedAmountResult.Data;
             #endregion
 
             #region ChangeMarginType
@@ -93,7 +91,7 @@ namespace TradeHelper.Controllers
                 futuresOrderType = FuturesOrderType.Limit;
                 Limit limit = (Limit)orderType;
 
-                IProcessResult roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(symbol, limit.LimitPrice);
+                var roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(symbol, limit.LimitPrice);
                 if (roundedPriceResult.Status == ProcessStatus.Fail)
                 {
                     result.Status = ProcessStatus.Fail;
@@ -101,10 +99,10 @@ namespace TradeHelper.Controllers
                     return result;
                 }
 
-                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, reCalculatedAmount,
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmountResult.Data,
                     reduceOnly: reduceOnly,
                     closePosition: closeAll,
-                    price: (decimal)roundedPriceResult.Data,
+                    price: roundedPriceResult.Data,
                     timeInForce: limit.TimeInForce);
                 if (!positionResult.Success)
                 {
@@ -120,7 +118,7 @@ namespace TradeHelper.Controllers
                 futuresOrderType = FuturesOrderType.Market;
                 Market market = (Market)orderType;
 
-                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, reCalculatedAmount,
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmountResult.Data,
                     reduceOnly: reduceOnly,
                     closePosition: closeAll);
                 if (!positionResult.Success)
@@ -137,7 +135,7 @@ namespace TradeHelper.Controllers
                 futuresOrderType = FuturesOrderType.TrailingStopMarket;
                 TrailingStopMarket trailingStopMarket = (TrailingStopMarket)orderType;
 
-                IProcessResult roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(symbol, trailingStopMarket.ActivationPrice);
+                var roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(symbol, trailingStopMarket.ActivationPrice);
                 if (roundedPriceResult.Status == ProcessStatus.Fail)
                 {
                     result.Status = ProcessStatus.Fail;
@@ -145,11 +143,11 @@ namespace TradeHelper.Controllers
                     return result;
                 }
 
-                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, reCalculatedAmount,
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmountResult.Data,
                     reduceOnly: reduceOnly,
                     closePosition: closeAll,
                     callbackRate: trailingStopMarket.CallbackRate,
-                    activationPrice: (decimal)roundedPriceResult.Data,
+                    activationPrice: roundedPriceResult.Data,
                     workingType: trailingStopMarket.ActivationPriceType);
                 if (!positionResult.Success)
                 {
@@ -187,7 +185,7 @@ namespace TradeHelper.Controllers
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderLocationResult = await GetOrderLocationAsync(openedOrder);
+            var orderLocationResult = await GetOrderLocationAsync(openedOrder);
             if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -195,7 +193,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenOrders)
+            if (orderLocationResult.Data != OrderLocation.OpenOrders)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = "The given order is not located in open orders";
@@ -213,9 +211,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> GetOrderLocationAsync(IOrderResult order)
+        public async Task<IProcessResult<OrderLocation>> GetOrderLocationAsync(IOrderResult order)
         {
-            ProcessResult result = new ProcessResult();
+            OrderLocationProcessResult result = new OrderLocationProcessResult();
             result.Status = ProcessStatus.Success;
 
             var openOrderResult = await client.UsdFuturesApi.Trading.GetOpenOrdersAsync();
@@ -269,12 +267,12 @@ namespace TradeHelper.Controllers
             }
         }
 
-        public async Task<IProcessResult> GetPositionDataAsync(IOrderResult order)
+        public async Task<IProcessResult<IPositionResult>> GetPositionDataAsync(IOrderResult order)
         {
-            ProcessResult result = new ProcessResult();
+            PositionProcessResult result = new PositionProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            var orderLocationResult = await GetOrderLocationAsync(order);
             if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -282,7 +280,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenPositions)
+            if (orderLocationResult.Data != OrderLocation.OpenPositions)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = "The given order is not located in positions";
@@ -317,12 +315,12 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> GetTradeDataAsync(IOrderResult order)
+        public async Task<IProcessResult<ITradeResult>> GetTradeDataAsync(IOrderResult order)
         {
-            ProcessResult result = new ProcessResult();
+            TradeProcessResult result = new TradeProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            var orderLocationResult = await GetOrderLocationAsync(order);
             if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -330,7 +328,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            if ((OrderLocation)orderLocationResult.Data != OrderLocation.TradeHistory)
+            if (orderLocationResult.Data != OrderLocation.TradeHistory)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = "The given order is not located in trade history";
@@ -367,7 +365,7 @@ namespace TradeHelper.Controllers
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            var orderLocationResult = await GetOrderLocationAsync(order);
             if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -375,7 +373,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenPositions)
+            if (orderLocationResult.Data != OrderLocation.OpenPositions)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = "The given order is not located in positions";
@@ -386,7 +384,7 @@ namespace TradeHelper.Controllers
             if (order.OrderSide == OrderSide.Buy) newSide = OrderSide.Sell;
             else newSide = OrderSide.Buy;
 
-            IProcessResult roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(order.Symbol, netPrice);
+            var roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(order.Symbol, netPrice);
             if (roundedPriceResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -401,7 +399,7 @@ namespace TradeHelper.Controllers
                 quantity: null,
                 reduceOnly: true,
                 closePosition: true,
-                stopPrice: (decimal)roundedPriceResult.Data,
+                stopPrice: roundedPriceResult.Data,
                 workingType: priceType);
             if (!orderResult.Success)
             {
@@ -418,7 +416,7 @@ namespace TradeHelper.Controllers
             ProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
-            IProcessResult orderLocationResult = await GetOrderLocationAsync(order);
+            var orderLocationResult = await GetOrderLocationAsync(order);
             if (orderLocationResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -426,7 +424,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            if ((OrderLocation)orderLocationResult.Data != OrderLocation.OpenPositions)
+            if (orderLocationResult.Data != OrderLocation.OpenPositions)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = "The given order is not located in positions";
@@ -437,7 +435,7 @@ namespace TradeHelper.Controllers
             if (order.OrderSide == OrderSide.Buy) newSide = OrderSide.Sell;
             else newSide = OrderSide.Buy;
 
-            IProcessResult roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(order.Symbol, netPrice);
+            var roundedPriceResult = await TradeHelpers.FilterPriceByPrecisionAsync(order.Symbol, netPrice);
             if (roundedPriceResult.Status == ProcessStatus.Fail)
             {
                 result.Status = ProcessStatus.Fail;
@@ -452,7 +450,7 @@ namespace TradeHelper.Controllers
                 quantity: null,
                 reduceOnly: true,
                 closePosition: true,
-                stopPrice: (decimal)roundedPriceResult.Data,
+                stopPrice: roundedPriceResult.Data,
                 workingType: priceType);
             if (!orderResult.Success)
             {
@@ -464,9 +462,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> ClosePositionAsync(IPositionResult openedPosition)
+        public async Task<IProcessResult<IOrderResult>> ClosePositionAsync(IPositionResult openedPosition)
         {
-            ProcessResult result = new ProcessResult();
+            OrderProcessResult result = new OrderProcessResult();
             result.Status = ProcessStatus.Success;
 
             if (openedPosition == null)
@@ -508,9 +506,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> GetBalanceAsync()
+        public async Task<IProcessResult<decimal>> GetBalanceAsync()
         {
-            ProcessResult result = new ProcessResult();
+            DecimalProcessResult result = new DecimalProcessResult();
             result.Status = ProcessStatus.Success;
 
             var balanceResult = await client.UsdFuturesApi.Account.GetAccountInfoAsync();
