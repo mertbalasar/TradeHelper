@@ -17,8 +17,8 @@ namespace TradeHelper.Interfaces
         Task<IProcessResult<OrderLocation>> GetOrderLocationAsync(IOrderResult order);
         Task<IProcessResult<IPositionResult>> GetPositionDataAsync(IOrderResult order);
         Task<IProcessResult<ITradeResult>> GetTradeDataAsync(IOrderResult order);
-        Task<IProcessResult> SetTakeProfitAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract);
-        Task<IProcessResult> SetStopLossAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract);
+        Task<IProcessResult<IOrderResult>> SetTakeProfitAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract);
+        Task<IProcessResult<IOrderResult>> SetStopLossAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract);
         Task<IProcessResult<IOrderResult>> ClosePositionAsync(IPositionResult openedPosition);
         Task<IProcessResult<decimal>> GetBalanceAsync();
     }

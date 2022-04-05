@@ -360,9 +360,9 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult> SetTakeProfitAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract)
+        public async Task<IProcessResult<IOrderResult>> SetTakeProfitAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract)
         {
-            ProcessResult result = new ProcessResult();
+            OrderProcessResult result = new OrderProcessResult();
             result.Status = ProcessStatus.Success;
 
             var orderLocationResult = await GetOrderLocationAsync(order);
@@ -408,12 +408,29 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
+            OrderResult orderResultData = new OrderResult()
+            {
+                TimeStamp = orderResult.Data.UpdateTime,
+                OrderID = orderResult.Data.Id,
+                Symbol = orderResult.Data.Symbol,
+                OrderType = orderResult.Data.Type,
+                OrderSide = orderResult.Data.Side,
+                Quantity = orderResult.Data.Quantity,
+                PositionSide = orderResult.Data.PositionSide,
+                ReduceOnly = orderResult.Data.ReduceOnly,
+                ClosePosition = orderResult.Data.ClosePosition,
+                ActivatePrice = orderResult.Data.ActivatePrice,
+                PriceType = orderResult.Data.WorkingType,
+                TimeInForce = orderResult.Data.TimeInForce
+            };
+            result.Data = orderResultData;
+
             return result;
         }
 
-        public async Task<IProcessResult> SetStopLossAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract)
+        public async Task<IProcessResult<IOrderResult>> SetStopLossAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract)
         {
-            ProcessResult result = new ProcessResult();
+            OrderProcessResult result = new OrderProcessResult();
             result.Status = ProcessStatus.Success;
 
             var orderLocationResult = await GetOrderLocationAsync(order);
@@ -458,6 +475,23 @@ namespace TradeHelper.Controllers
                 result.Message = orderResult.Error.Message;
                 return result;
             }
+
+            OrderResult orderResultData = new OrderResult()
+            {
+                TimeStamp = orderResult.Data.UpdateTime,
+                OrderID = orderResult.Data.Id,
+                Symbol = orderResult.Data.Symbol,
+                OrderType = orderResult.Data.Type,
+                OrderSide = orderResult.Data.Side,
+                Quantity = orderResult.Data.Quantity,
+                PositionSide = orderResult.Data.PositionSide,
+                ReduceOnly = orderResult.Data.ReduceOnly,
+                ClosePosition = orderResult.Data.ClosePosition,
+                ActivatePrice = orderResult.Data.ActivatePrice,
+                PriceType = orderResult.Data.WorkingType,
+                TimeInForce = orderResult.Data.TimeInForce
+            };
+            result.Data = orderResultData;
 
             return result;
         }
