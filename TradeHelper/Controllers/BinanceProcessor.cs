@@ -340,7 +340,7 @@ namespace TradeHelper.Controllers
                 return result;
             }
 
-            if (orderLocationResult.Data != OrderLocation.TradeHistory)
+            if (orderLocationResult.Data != OrderLocation.TradeHistory || orderLocationResult.Data != OrderLocation.OpenPositions)
             {
                 result.Status = ProcessStatus.Fail;
                 result.Message = "The given order is not located in trade history";
