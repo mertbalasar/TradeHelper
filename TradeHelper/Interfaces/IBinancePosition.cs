@@ -12,7 +12,7 @@ namespace TradeHelper.Interfaces
     public interface IBinancePosition
     {
         IProcessResult AddCredential(string key, string secret);
-        Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, decimal costAmount, OrderSide orderSide, int leverage, IOrderType orderType, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false);
+        Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, OrderSide orderSide, IOrderType orderType, decimal? costAmount = null, int? leverage = null, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false);
         Task<IProcessResult> CancelOrderAsync(IOrderResult openedOrder);
         Task<IProcessResult<OrderLocation>> GetOrderLocationAsync(IOrderResult order);
         Task<IProcessResult<IPositionResult>> GetPositionDataAsync(IOrderResult order);

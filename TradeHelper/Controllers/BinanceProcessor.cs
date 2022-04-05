@@ -44,18 +44,22 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, decimal costAmount, OrderSide orderSide, int leverage, IOrderType orderType, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false)
+        public async Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, OrderSide orderSide, IOrderType orderType, decimal? costAmount = null, int? leverage = null, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false)
         {
             OrderProcessResult result = new OrderProcessResult();
             result.Status = ProcessStatus.Success;
 
             #region RoundAmount
-            var roundedAmountResult = await TradeHelpers.FilterAmountByPrecisionAsync(symbol, costAmount * leverage);
-            if (roundedAmountResult.Status == ProcessStatus.Fail)
+            IProcessResult<decimal> roundedAmountResult = null;
+            if (costAmount != null && leverage != null)
             {
-                result.Status = ProcessStatus.Fail;
-                result.Message = roundedAmountResult.Message;
-                return result;
+                roundedAmountResult = await TradeHelpers.FilterAmountByPrecisionAsync(symbol, ((decimal)costAmount) * ((int)leverage));
+                if (roundedAmountResult.Status == ProcessStatus.Fail)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = roundedAmountResult.Message;
+                    return result;
+                }
             }
             #endregion
 
@@ -73,12 +77,15 @@ namespace TradeHelper.Controllers
             #endregion
 
             #region ChangeLeverage
-            var leverageResult = await client.UsdFuturesApi.Account.ChangeInitialLeverageAsync(symbol, leverage);
-            if (!leverageResult.Success)
+            if (leverage != null)
             {
-                result.Status = ProcessStatus.Fail;
-                result.Message = leverageResult.Error.Message;
-                return result;
+                var leverageResult = await client.UsdFuturesApi.Account.ChangeInitialLeverageAsync(symbol, (int)leverage);
+                if (!leverageResult.Success)
+                {
+                    result.Status = ProcessStatus.Fail;
+                    result.Message = leverageResult.Error.Message;
+                    return result;
+                }
             }
             #endregion
 
