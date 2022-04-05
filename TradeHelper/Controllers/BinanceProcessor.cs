@@ -44,16 +44,19 @@ namespace TradeHelper.Controllers
             return result;
         }
 
-        public async Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, OrderSide orderSide, IOrderType orderType, decimal? costAmount = null, int? leverage = null, FuturesMarginType marginType = FuturesMarginType.Isolated, bool reduceOnly = false, bool closeAll = false)
+        public async Task<IProcessResult<IOrderResult>> OpenOrderAsync(string symbol, OrderSide orderSide, IOrderType orderType, decimal? costAmount = null, int? leverage = null, bool? reduceOnly = null, bool? closeAll = null, FuturesMarginType marginType = FuturesMarginType.Isolated)
         {
             OrderProcessResult result = new OrderProcessResult();
             result.Status = ProcessStatus.Success;
 
             #region RoundAmount
             IProcessResult<decimal> roundedAmountResult = null;
-            if (costAmount != null && leverage != null)
+            if (costAmount != null)
             {
-                roundedAmountResult = await TradeHelpers.FilterAmountByPrecisionAsync(symbol, ((decimal)costAmount) * ((int)leverage));
+                int newLeverage = 1;
+                if (leverage != null) newLeverage = (int)leverage;
+
+                roundedAmountResult = await TradeHelpers.FilterAmountByPrecisionAsync(symbol, ((decimal)costAmount) * newLeverage);
                 if (roundedAmountResult.Status == ProcessStatus.Fail)
                 {
                     result.Status = ProcessStatus.Fail;
@@ -92,6 +95,8 @@ namespace TradeHelper.Controllers
             #region PlaceOrder
             FuturesOrderType futuresOrderType = FuturesOrderType.Market;
             BinanceFuturesPlacedOrder placedOrder = null;
+            decimal? roundedAmount = null;
+            if (roundedAmountResult != null) roundedAmount = roundedAmountResult.Data;
 
             if (orderType.GetType() == typeof(Limit))
             {
@@ -106,7 +111,7 @@ namespace TradeHelper.Controllers
                     return result;
                 }
 
-                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmountResult.Data,
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmount,
                     reduceOnly: reduceOnly,
                     closePosition: closeAll,
                     price: roundedPriceResult.Data,
@@ -125,7 +130,7 @@ namespace TradeHelper.Controllers
                 futuresOrderType = FuturesOrderType.Market;
                 Market market = (Market)orderType;
 
-                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmountResult.Data,
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmount,
                     reduceOnly: reduceOnly,
                     closePosition: closeAll);
                 if (!positionResult.Success)
@@ -150,7 +155,7 @@ namespace TradeHelper.Controllers
                     return result;
                 }
 
-                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmountResult.Data,
+                var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(symbol, orderSide, futuresOrderType, roundedAmount,
                     reduceOnly: reduceOnly,
                     closePosition: closeAll,
                     callbackRate: trailingStopMarket.CallbackRate,
@@ -404,7 +409,7 @@ namespace TradeHelper.Controllers
                 newSide,
                 FuturesOrderType.TakeProfitMarket,  
                 quantity: null,
-                reduceOnly: true,
+                reduceOnly: null,
                 closePosition: true,
                 stopPrice: roundedPriceResult.Data,
                 workingType: priceType);
@@ -472,7 +477,7 @@ namespace TradeHelper.Controllers
                 newSide,
                 FuturesOrderType.StopMarket,
                 quantity: null,
-                reduceOnly: true,
+                reduceOnly: null,
                 closePosition: true,
                 stopPrice: roundedPriceResult.Data,
                 workingType: priceType);
