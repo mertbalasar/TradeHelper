@@ -10,5 +10,6 @@ namespace TradeHelper.Enums
     {
         public enum ProcessStatus { Success, Fail }
         public enum OrderLocation { OpenOrders, OpenPositions, TradeHistory, Unknown }
+        public enum CommissionCategory { HighCommission, LowCommission }
     }
 }

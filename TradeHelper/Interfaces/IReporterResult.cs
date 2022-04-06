@@ -15,7 +15,8 @@ namespace TradeHelper.Interfaces
         int ProfitedPositionCount { get; set; }
         int LossedPositionCount { get; set; }
         decimal AccuracyRatio { get; set; }
-        decimal RealizedPNL { get; set; }
+        decimal TotalPNLWithReducedFee { get; set; }
+        decimal TotalPNLWithoutReducedFee { get; set; }
         decimal TotalFee { get; set; }
         List<IReporterDetailsResult> Details { get; set; }
     }

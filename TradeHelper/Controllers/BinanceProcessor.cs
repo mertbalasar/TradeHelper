@@ -174,7 +174,7 @@ namespace TradeHelper.Controllers
 
             OrderResult orderResult = new OrderResult() 
             { 
-                TimeStamp = placedOrder.UpdateTime,
+                TimeStamp = placedOrder.UpdateTime.AddHours(GMTForGraph),
                 OrderID = placedOrder.Id, 
                 Symbol = placedOrder.Symbol, 
                 OrderType = placedOrder.Type,
@@ -363,8 +363,12 @@ namespace TradeHelper.Controllers
                 tradeData.Symbol = trade.Symbol;
                 tradeData.PNL += trade.RealizedPnl;
                 tradeData.FeeUSDT += trade.Fee;
-                tradeData.TimeStamp = trade.Timestamp;
+                tradeData.TimeStamp = trade.Timestamp.AddHours(GMTForGraph);
                 tradeData.Price = trade.Price;
+                tradeData.OrderSide = trade.Side;
+                tradeData.PositionSide = trade.PositionSide;
+                tradeData.QuantityUSDT += trade.QuoteQuantity;
+                tradeData.CommissionCategory = trade.Maker ? CommissionCategory.LowCommission : CommissionCategory.HighCommission;
             }
 
             result.Data = tradeData;
@@ -422,7 +426,7 @@ namespace TradeHelper.Controllers
 
             OrderResult orderResultData = new OrderResult()
             {
-                TimeStamp = orderResult.Data.UpdateTime,
+                TimeStamp = orderResult.Data.UpdateTime.AddHours(GMTForGraph),
                 OrderID = orderResult.Data.Id,
                 Symbol = orderResult.Data.Symbol,
                 OrderType = orderResult.Data.Type,
@@ -490,7 +494,7 @@ namespace TradeHelper.Controllers
 
             OrderResult orderResultData = new OrderResult()
             {
-                TimeStamp = orderResult.Data.UpdateTime,
+                TimeStamp = orderResult.Data.UpdateTime.AddHours(GMTForGraph),
                 OrderID = orderResult.Data.Id,
                 Symbol = orderResult.Data.Symbol,
                 OrderType = orderResult.Data.Type,
@@ -534,7 +538,7 @@ namespace TradeHelper.Controllers
 
             OrderResult orderResult = new OrderResult()
             {
-                TimeStamp = positionResult.Data.UpdateTime,
+                TimeStamp = positionResult.Data.UpdateTime.AddHours(GMTForGraph),
                 OrderID = positionResult.Data.Id,
                 Symbol = positionResult.Data.Symbol,
                 OrderType = positionResult.Data.Type,

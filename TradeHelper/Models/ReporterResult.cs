@@ -16,7 +16,8 @@ namespace TradeHelper.Models
         public int ProfitedPositionCount { get; set; }
         public int LossedPositionCount { get; set; }
         public decimal AccuracyRatio { get; set; }
-        public decimal RealizedPNL { get; set; }
+        public decimal TotalPNLWithReducedFee { get; set; }
+        public decimal TotalPNLWithoutReducedFee { get; set; }
         public decimal TotalFee { get; set; }
         public List<IReporterDetailsResult> Details { get; set; }
     }

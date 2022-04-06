@@ -67,7 +67,6 @@ C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\bin\Debug\Microsoft.E
 C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\bin\Debug\Microsoft.Extensions.Logging.Abstractions.xml
 C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\bin\Debug\Newtonsoft.Json.xml
 C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\bin\Debug\Skender.Stock.Indicators.xml
-C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\obj\Debug\TradeHelper.csprojAssemblyReference.cache
 C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\obj\Debug\TradeHelper.csproj.CoreCompileInputs.cache
 C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\obj\Debug\TradeHelper.csproj.CopyComplete
 C:\Users\mert.balasar\source\repos\TradeHelper\TradeHelper\obj\Debug\TradeHelper.dll

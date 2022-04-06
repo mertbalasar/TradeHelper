@@ -85,7 +85,8 @@ namespace TradeHelper.Controllers
             {
                 report.AccuracyRatio = (100 * report.ProfitedPositionCount) / report.TotalPositionCount;
             }           
-            report.RealizedPNL += closedPosition.PNL - closedPosition.FeeUSDT;
+            report.TotalPNLWithoutReducedFee += closedPosition.PNL;
+            report.TotalPNLWithReducedFee = report.TotalPNLWithoutReducedFee - report.TotalFee;
             
             IProcessResult saveResult = SaveReport(report);
             if (saveResult.Status == ProcessStatus.Fail)
