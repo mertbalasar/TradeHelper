@@ -1,4 +1,4 @@
-# TradeHelper
+# TradeHelper (v1.0.0)
 Hi everyone, welcome to my project. You will learn to how to coding a TradeHelper project in here. Let's go we start!
 
 ## Contents
