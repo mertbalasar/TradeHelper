@@ -16,7 +16,7 @@ TradeHelper is a project that helps about trade strategy. You firstly create a c
 
 ## Tutorial
 
-Please look at the `Tutorial/TUTORIAL.md` file for details.
+Please look at the `Tutorial/TUTORIAL.md` file for details. (out of date, update is coming soon)
 
 ## Tanks For
 
