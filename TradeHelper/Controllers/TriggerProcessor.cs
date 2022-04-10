@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TradeHelper.AbstractClasses;
 using TradeHelper.Interfaces;
@@ -18,6 +19,7 @@ namespace TradeHelper.Controllers
         private bool status = false;
         private bool allow;
         private bool? now = null, before = null;
+        private AutoResetEvent autoResetEventRunAlways, autoResetEventRunTrigger;
 
         private bool Control(KlineInterval interval)
         {
@@ -110,6 +112,8 @@ namespace TradeHelper.Controllers
 
         internal void Start(KlineInterval interval)
         {
+            autoResetEventRunAlways = new AutoResetEvent(false);
+            autoResetEventRunTrigger = new AutoResetEvent(false);
             status = true;
 
             Task.Run(() =>
@@ -122,6 +126,8 @@ namespace TradeHelper.Controllers
                     if ((bool)before != (bool)now && (bool)now && Triggered != null) Triggered(new object(), Strategy);
 
                     before = now;
+
+                    autoResetEventRunTrigger.WaitOne(2, true);
                 }
             });
 
@@ -131,6 +137,8 @@ namespace TradeHelper.Controllers
                 {
                     await Strategy.RunAlways();
                     await Task.Delay(Strategy.Settings.RunAlwaysDelay);
+
+                    autoResetEventRunAlways.WaitOne(2, true);
                 }
             });
         }
