@@ -17,11 +17,11 @@ namespace TradeHelper
     {
         private static List<TriggerProcessor> Strategies { get; set; } = new List<TriggerProcessor>();
 
-        public static IProcessResult<Strategy> Append(Type strategyClass)
+        public static IProcessResult Append(Type strategyClass)
         {
             Strategy strategy = (Strategy)Activator.CreateInstance(strategyClass);
 
-            IProcessResult<Strategy> result = new StrategyProcessResult();
+            IProcessResult result = new ProcessResult();
             result.Status = ProcessStatus.Success;
 
             TriggerProcessor bound = Strategies.ToList().Where((element) => element.Strategy.GetType() == strategy.GetType()).FirstOrDefault();
@@ -45,8 +45,6 @@ namespace TradeHelper
                 result.Status = ProcessStatus.Fail;
                 result.Message = e.Message;
             }
-
-            result.Data = strategy;
 
             return result;
         }

@@ -71,11 +71,4 @@ namespace TradeHelper.Models
         public string Message { get; set; }
         public List<string> Data { get; set; }
     }
-
-    internal class StrategyProcessResult : IProcessResult<Strategy>
-    {
-        public ProcessStatus Status { get; set; }
-        public string Message { get; set; }
-        public Strategy Data { get; set; }
-    }
 }
