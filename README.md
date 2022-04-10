@@ -41,3 +41,5 @@ Please look at the `Tutorial/TUTORIAL.md` file for details.
 - Changed `IPositionResult`, `ITradeResult` and added `IOrderResult` new
 * v1.2.0
 - Changed `IProcessResult` struct with `IProcessResult<T>`
+* v1.3.0
+- Performance improvement (CPU usage deducted from ~%20 to ~%0.8)
