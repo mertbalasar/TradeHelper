@@ -25,9 +25,9 @@ Please look at the `Tutorial/TUTORIAL.md` file for details. (out of date, update
 
 ## Releases
 
-* v1.0.0
+### v1.0.0
 - Created project
-* v1.1.0
+### v1.1.0
 - Fixed and refactored `TradeResult` for order partition result bug
 - Fixed GMT bug for `Binance` into reports
 - Fixed TotalFee bug for `Binance` into reports
@@ -39,7 +39,7 @@ Please look at the `Tutorial/TUTORIAL.md` file for details. (out of date, update
 - Added `StrategySettings` into `Strategy` that contains `RunTriggeredInterval`, `RunAlwaysDelay`, `Symbols`, `GMTForGraph` and `MailList`
 - Added `StrategyTools` into `Strategy` that contains `Binance`, `Test`, `Notification` and `Report`
 - Changed `IPositionResult`, `ITradeResult` and added `IOrderResult` new
-* v1.2.0
+### v1.2.0
 - Changed `IProcessResult` struct with `IProcessResult<T>`
-* v1.3.0
+### v1.3.0
 - Performance improvement (CPU usage deducted from ~%20 to ~%0.8)
