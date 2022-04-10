@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TradeHelper.AbstractClasses;
 using TradeHelper.Interfaces;
 using static TradeHelper.Enums.EnumLibrary;
 
@@ -69,5 +70,12 @@ namespace TradeHelper.Models
         public ProcessStatus Status { get; set; }
         public string Message { get; set; }
         public List<string> Data { get; set; }
+    }
+
+    internal class StrategyProcessResult : IProcessResult<Strategy>
+    {
+        public ProcessStatus Status { get; set; }
+        public string Message { get; set; }
+        public Strategy Data { get; set; }
     }
 }
