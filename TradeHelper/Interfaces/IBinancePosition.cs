@@ -21,5 +21,6 @@ namespace TradeHelper.Interfaces
         Task<IProcessResult<IOrderResult>> SetStopLossAsync(IOrderResult order, decimal netPrice, WorkingType priceType = WorkingType.Contract);
         Task<IProcessResult<IOrderResult>> ClosePositionAsync(IPositionResult openedPosition);
         Task<IProcessResult<decimal>> GetBalanceAsync();
+        IProcessResult<IBinancePosition> GetNewInstance(int? gmtForGraph = null);
     }
 }

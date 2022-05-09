@@ -574,5 +574,19 @@ namespace TradeHelper.Controllers
 
             return result;
         }
+
+        public IProcessResult<IBinancePosition> GetNewInstance(int? gmtForGraph = null)
+        {
+            BinanceProcessorProcessResult result = new BinanceProcessorProcessResult();
+            result.Status = ProcessStatus.Success;
+
+            BinanceProcessor clonedInstance = new BinanceProcessor();
+            if (gmtForGraph != null) clonedInstance.GMTForGraph = (int)gmtForGraph;
+            else clonedInstance.GMTForGraph = GMTForGraph;
+
+            result.Data = clonedInstance;
+
+            return result;
+        }
     }
 }

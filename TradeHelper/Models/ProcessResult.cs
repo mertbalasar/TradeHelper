@@ -71,4 +71,11 @@ namespace TradeHelper.Models
         public string Message { get; set; }
         public List<string> Data { get; set; }
     }
+
+    internal class BinanceProcessorProcessResult : IProcessResult<IBinancePosition>
+    {
+        public ProcessStatus Status { get; set; }
+        public string Message { get; set; }
+        public IBinancePosition Data { get; set; }
+    }
 }
