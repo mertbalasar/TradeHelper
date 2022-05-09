@@ -44,4 +44,4 @@ Please look at the `Tutorial/TUTORIAL.md` file for details. (out of date, update
 ### v1.3.0
 - Performance improvement (CPU usage deducted from ~%20 to ~%0.8)
 ### v1.4.0
-- Added `GetNewInstance` method into `IBinanceProcessor` interface for multiple binance instance support
+- Added `GetNewInstance` method into `IBinancePosition` interface for multiple binance instance support
