@@ -526,7 +526,14 @@ namespace TradeHelper.Controllers
 
             OrderSide side;
             if (openedPosition.Side == PositionSide.Long) side = OrderSide.Sell;
-            else side = OrderSide.Buy;
+            else if (openedPosition.Side == PositionSide.Short) side = OrderSide.Buy;
+            else
+            {
+                if (openedPosition.Quantity >= 0) side = OrderSide.Sell;
+                else side = OrderSide.Buy;
+            }
+
+            if (openedPosition.Quantity < 0) openedPosition.Quantity *= -1;
 
             var positionResult = await client.UsdFuturesApi.Trading.PlaceOrderAsync(openedPosition.Symbol, side, FuturesOrderType.Market, openedPosition.Quantity, reduceOnly: true);
             if (!positionResult.Success)
