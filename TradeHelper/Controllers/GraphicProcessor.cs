@@ -89,11 +89,6 @@ namespace TradeHelper.Controllers
 
                 quotes = TradeHelpers.GetQuotes(klineResult.Data.ToList()).Data;
 
-                foreach (Quote kline in quotes)
-                {
-                    kline.Date = kline.Date.AddHours(gmt);
-                }
-
                 klines.Add(new KlineResult() { Symbol = currentSymbol, Klines = klineResult.Data.ToList(), Indicators = quotes });
             }
 
