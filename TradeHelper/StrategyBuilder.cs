@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TradeHelper.AbstractClasses;
 using TradeHelper.Controllers;
@@ -15,6 +16,7 @@ namespace TradeHelper
 {
     public static class StrategyBuilder
     {
+        private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
         private static List<TriggerProcessor> Strategies { get; set; } = new List<TriggerProcessor>();
 
         public static IProcessResult Append(Type strategyClass)
@@ -155,8 +157,6 @@ namespace TradeHelper
 
         private static async void Trigger_Triggered(object sender, Strategy strategy)
         {
-            await Task.Delay(800);
-
             KlineInterval intervalParam = KlineInterval.OneMinute;
             if (strategy.Settings.RunTriggeredInterval != null)
             {
@@ -176,6 +176,38 @@ namespace TradeHelper
             }
 
             var klineResult = await GraphicProcessor.GetKlinesAsync(symbolParam.ToArray(), intervalParam, gmt: strategy.Settings.GMTForGraph);
+
+            await Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (klineResult.Data.Count > 0)
+                    {
+                        DateTime nowDate = DateTime.Now;
+                        if (
+                            klineResult.Data[0].Klines.Last().OpenTime.Year == nowDate.Year &&
+                            klineResult.Data[0].Klines.Last().OpenTime.Month == nowDate.Month &&
+                            klineResult.Data[0].Klines.Last().OpenTime.Day == nowDate.Day &&
+                            klineResult.Data[0].Klines.Last().OpenTime.Hour == nowDate.Hour &&
+                            klineResult.Data[0].Klines.Last().OpenTime.Minute == nowDate.Minute
+                            )
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            klineResult = await GraphicProcessor.GetKlinesAsync(symbolParam.ToArray(), intervalParam, gmt: strategy.Settings.GMTForGraph);
+                        }
+
+                        autoResetEvent.WaitOne(2, true);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            });
+            
 
             await strategy.RunTriggered(klineResult);
         }

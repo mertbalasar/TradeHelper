@@ -70,3 +70,4 @@ C:\Users\mertb\Desktop\TradeHelper\TradeHelper\obj\Debug\TradeHelper.csproj.Core
 C:\Users\mertb\Desktop\TradeHelper\TradeHelper\obj\Debug\TradeHelper.csproj.CopyComplete
 C:\Users\mertb\Desktop\TradeHelper\TradeHelper\obj\Debug\TradeHelper.dll
 C:\Users\mertb\Desktop\TradeHelper\TradeHelper\obj\Debug\TradeHelper.pdb
+C:\Users\mertb\Desktop\TradeHelper\TradeHelper\obj\Debug\TradeHelper.csprojAssemblyReference.cache
